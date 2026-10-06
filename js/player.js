@@ -34,6 +34,7 @@ export function createPlayer(mount, ctx) {
   };
 
   mount.innerHTML = shell(ctx);
+  const wrap   = $('.player-wrap', mount);
   const root   = $('.player', mount);
   const video  = $('video', root);
   const poster = $('.pl-poster', root);
@@ -58,6 +59,76 @@ export function createPlayer(mount, ctx) {
   video.playbackRate = s.rate || 1;
   setVolUi();
 
+  /* ══ AMBIENT LIGHT ═══════════════════════════════════
+     Downscaled video frames are painted into two tiny canvases sitting
+     behind the player; CSS blurs them into a wash of colour that bleeds
+     out past the frame. We only ever draw — never read pixels back — so
+     a cross-origin stream tainting the canvas costs us nothing. */
+  const AMB = {
+    off:  null,
+    soft: { opacity: 0.5,  blur: 54, sat: 1.8, fps: 8  },
+    full: { opacity: 1,    blur: 78, sat: 2.5, fps: 12 },
+    neon: { opacity: 1.35, blur: 96, sat: 3.6, fps: 15 },
+  };
+  const AMB_ORDER = ['off', 'soft', 'full', 'neon'];
+
+  const amb = {
+    mode: AMB[getSettings().ambient] !== undefined ? getSettings().ambient : 'full',
+    raf: null, last: 0, broken: false,
+    canvases: $$('.pl-amb', wrap),
+  };
+  amb.ctxs = amb.canvases.map((c) => c.getContext('2d', { alpha: false }));
+
+  function ambApply() {
+    const cfg = AMB[amb.mode];
+    const live = Boolean(cfg) && !amb.broken && Boolean(st.src);
+    wrap.classList.toggle('amb-on', live);
+    if (cfg) {
+      wrap.style.setProperty('--amb-opacity', cfg.opacity);
+      wrap.style.setProperty('--amb-blur', `${cfg.blur}px`);
+      wrap.style.setProperty('--amb-sat', cfg.sat);
+    }
+    $('[data-act="amb"]', root)?.classList.toggle('is-on', live);
+    live && !video.paused ? ambStart() : ambStop();
+    if (live) ambPaint();          // one frame now, so a paused video still glows
+  }
+
+  function ambPaint() {
+    if (amb.broken || video.readyState < 2) return;
+    try {
+      for (let i = 0; i < amb.canvases.length; i++) {
+        const c = amb.canvases[i];
+        amb.ctxs[i].drawImage(video, 0, 0, c.width, c.height);
+      }
+    } catch {
+      /* some decoders refuse drawImage entirely — fail quiet, not loud */
+      amb.broken = true;
+      wrap.classList.remove('amb-on');
+      ambStop();
+    }
+  }
+
+  function ambTick(t) {
+    amb.raf = requestAnimationFrame(ambTick);
+    const cfg = AMB[amb.mode];
+    if (!cfg) return;
+    if (t - amb.last < 1000 / cfg.fps) return;
+    amb.last = t;
+    ambPaint();
+  }
+  function ambStart() { if (!amb.raf) amb.raf = requestAnimationFrame(ambTick); }
+  function ambStop()  { if (amb.raf) { cancelAnimationFrame(amb.raf); amb.raf = null; } }
+
+  function ambSet(mode) {
+    amb.mode = AMB[mode] !== undefined ? mode : 'full';
+    setSetting('ambient', amb.mode);
+    ambApply();
+    toast(amb.mode === 'off' ? 'Ambient light off' : `Ambient light: ${amb.mode}`, 'info', 1600);
+  }
+  function ambCycle() {
+    ambSet(AMB_ORDER[(AMB_ORDER.indexOf(amb.mode) + 1) % AMB_ORDER.length]);
+  }
+
   /* ── source loading ────────────────────────────────── */
   async function load(source) {
     teardownHls();
@@ -67,10 +138,13 @@ export function createPlayer(mount, ctx) {
       poster.hidden = false;
       poster.querySelector('[data-pmsg]').innerHTML = noSourceMsg();
       spin.hidden = true;
+      ambApply();
       return;
     }
     st.src = source.src; st.type = source.type; st.intro = source.intro || null;
+    amb.broken = false;
     poster.hidden = true; spin.hidden = false;
+    ambApply();
     renderMarks();
 
     const isHls = (source.type || '').includes('mpegURL') || /\.m3u8(\?|$)/i.test(source.src);
@@ -194,8 +268,10 @@ export function createPlayer(mount, ctx) {
     tDur.textContent = fmtTime(video.duration);
     renderMarks();
   });
-  video.addEventListener('play',    () => { btnPlay.innerHTML = svg(ICON.pause); poster.hidden = true; });
-  video.addEventListener('pause',   () => { btnPlay.innerHTML = svg(ICON.play); persist(); });
+  video.addEventListener('play',    () => { btnPlay.innerHTML = svg(ICON.pause); poster.hidden = true; ambApply(); });
+  video.addEventListener('pause',   () => { btnPlay.innerHTML = svg(ICON.play); persist(); ambStop(); ambPaint(); });
+  video.addEventListener('loadeddata', ambApply);
+  video.addEventListener('seeked', ambPaint);
   video.addEventListener('waiting', () => { spin.hidden = false; });
   video.addEventListener('playing', () => { spin.hidden = true; });
   video.addEventListener('error',   () => { if (st.src && !st.hls) fail('The browser rejected this source.'); });
@@ -302,6 +378,7 @@ export function createPlayer(mount, ctx) {
       if (act === 'pip') togglePip();
       if (act === 'full') toggleFull();
       if (act === 'theater') { root.classList.toggle('is-theater'); ctx.onTheater?.(root.classList.contains('is-theater')); }
+      if (act === 'amb') ambCycle();
       if (act === 'menu') toggleMenu();
     });
   });
@@ -353,6 +430,11 @@ export function createPlayer(mount, ctx) {
           ${l.height ? l.height + 'p' : Math.round((l.bitrate || 0) / 1000) + 'kbps'}<span class="tick">${svg(ICON.check)}</span></button>`).join('')}
       </div>` : ''}
       <div class="pl-menu__group">
+        <div class="pl-menu__label">Ambient light</div>
+        ${AMB_ORDER.map((m) => `<button class="pl-menu__item ${amb.mode === m ? 'is-on' : ''}" data-amb="${m}">
+          ${m === 'off' ? 'Off' : m[0].toUpperCase() + m.slice(1)}<span class="tick">${svg(ICON.check)}</span></button>`).join('')}
+      </div>
+      <div class="pl-menu__group">
         <div class="pl-menu__label">Behaviour</div>
         <button class="pl-menu__item ${cur.autoplay ? 'is-on' : ''}" data-flag="autoplay">Autoplay<span class="tick">${svg(ICON.check)}</span></button>
         <button class="pl-menu__item ${cur.autoNext ? 'is-on' : ''}" data-flag="autoNext">Auto next episode<span class="tick">${svg(ICON.check)}</span></button>
@@ -363,6 +445,8 @@ export function createPlayer(mount, ctx) {
       const r = e.target.closest('[data-rate]');
       const l = e.target.closest('[data-level]');
       const f = e.target.closest('[data-flag]');
+      const am = e.target.closest('[data-amb]');
+      if (am) { ambSet(am.dataset.amb); openMenu(); }
       if (r) { video.playbackRate = Number(r.dataset.rate); openMenu(); }
       if (l && st.hls) { st.hls.currentLevel = Number(l.dataset.level); openMenu(); }
       if (f) { setSetting(f.dataset.flag, !getSettings()[f.dataset.flag]); openMenu(); }
@@ -399,7 +483,7 @@ export function createPlayer(mount, ctx) {
       ArrowUp: () => { video.muted = false; video.volume = clamp(video.volume + 0.1, 0, 1); },
       ArrowDown: () => { video.volume = clamp(video.volume - 0.1, 0, 1); },
       m: () => { video.muted = !video.muted; },
-      f: () => toggleFull(), i: () => togglePip(),
+      f: () => toggleFull(), i: () => togglePip(), a: () => ambCycle(),
       n: () => ctx.nextEp && ctx.onNext?.(ctx.nextEp),
       p: () => ctx.prevEp && ctx.onPrev?.(ctx.prevEp),
       ',': () => { video.playbackRate = RATES[clamp(RATES.indexOf(video.playbackRate) - 1, 0, RATES.length - 1)]; },
@@ -422,6 +506,7 @@ export function createPlayer(mount, ctx) {
     destroy() {
       st.destroyed = true;
       persist();
+      ambStop();
       clearTimeout(st.idleTimer); clearTimeout(st.saveTimer); clearInterval(nextTimer);
       window.removeEventListener('keydown', onKey);
       teardownHls();
@@ -433,6 +518,9 @@ export function createPlayer(mount, ctx) {
 function shell(ctx) {
   const title = ctx.anime?.title || 'Kitsu Live';
   return `
+  <div class="player-wrap">
+    <canvas class="pl-amb pl-amb--wash" width="40" height="23" aria-hidden="true"></canvas>
+    <canvas class="pl-amb pl-amb--core" width="40" height="23" aria-hidden="true"></canvas>
   <div class="player" tabindex="0">
     <video playsinline preload="metadata" crossorigin="anonymous"></video>
 
@@ -451,6 +539,7 @@ function shell(ctx) {
         <b>${esc(title)}</b>
         <small>Episode ${esc(ctx.episode)}</small>
       </div>
+      <span class="pl-top__amb"><i></i>AMBIENT</span>
     </div>
 
     <div class="pl-float" hidden>
@@ -480,6 +569,8 @@ function shell(ctx) {
         </div>
         <span class="pl-time"><b data-cur>0:00</b> / <span data-dur>0:00</span></span>
         <span class="pl-spacer"></span>
+        <button class="pl-btn" data-act="amb" aria-label="Ambient light" title="Ambient light (A)">
+          ${svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>')}</button>
         <div class="pl-menu">
           <button class="pl-btn" data-act="menu" aria-label="Settings">
             ${svg('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.4M12 18.6V21M4.2 7.5l2.1 1.2M17.7 15.3l2.1 1.2M4.2 16.5l2.1-1.2M17.7 8.7l2.1-1.2"/>')}</button>
@@ -492,5 +583,6 @@ function shell(ctx) {
           ${svg('<path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5"/>')}</button>
       </div>
     </div>
+  </div>
   </div>`;
 }

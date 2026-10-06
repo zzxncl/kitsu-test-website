@@ -54,12 +54,12 @@ export function cardHTML(a, opts = {}) {
         ${a.score ? `<span class="card__badge card__badge--score">${svg(ICON.star)}${a.score.toFixed(2)}</span>` : ''}
       </div>
       <div class="card__tr">
-        ${a.airing ? `<span class="card__badge" style="color:#ff8a6b">● Airing</span>` : ''}
+        ${a.airing ? `<span class="card__badge" style="color:var(--shu)">ON AIR</span>` : ''}
         ${inList(a.id) ? `<span class="card__badge">${svg(ICON.check)}</span>` : ''}
       </div>
-      ${rank != null ? `<span class="card__badge card__badge--rank" style="position:absolute;left:.45rem;bottom:.45rem;z-index:2">#${rank}</span>` : ''}
+      ${rank != null ? `<span class="card__rank num">${String(rank).padStart(2, '0')}</span>` : ''}
       <div class="card__scrim"><p>${esc((a.synopsis || '').slice(0, 170))}${(a.synopsis || '').length > 170 ? '…' : ''}</p></div>
-      <span class="card__play">${svg(ICON.play)}</span>
+      <span class="card__play">PLAY</span>
       ${pct > 1 ? `<div class="progress card__progress"><span style="width:${pct.toFixed(1)}%"></span></div>` : ''}
     </div>
     <div class="card__body">
@@ -78,7 +78,7 @@ export function episodeCardHTML(a, ep, sub = '') {
     <div class="ecard__art">
       ${imgTag(a.poster || genPoster(title), title, title, { ratio: '16/9' })}
       <span class="ecard__pill">EP ${esc(ep || 1)}</span>
-      <span class="card__play">${svg(ICON.play)}</span>
+      <span class="card__play">PLAY</span>
     </div>
     <div class="ecard__body">
       <h3 class="ecard__title">${esc(title)}</h3>
@@ -97,7 +97,7 @@ export function resumeCardHTML(row) {
     <div class="ecard__art">
       ${imgTag(a.poster || genPoster(title), title, title, { ratio: '16/9' })}
       <span class="ecard__pill">${row.done ? `NEXT · EP ${row.nextEp}` : `EP ${row.ep}`}</span>
-      <span class="card__play">${svg(ICON.play)}</span>
+      <span class="card__play">RESUME</span>
       <div class="progress card__progress"><span style="width:${(row.pct || 0).toFixed(1)}%"></span></div>
     </div>
     <div class="ecard__body">
@@ -112,7 +112,7 @@ export function topRowHTML(a, n) {
   const title = displayTitle(a);
   return `
   <a class="toprow" href="#/anime/${a.id}">
-    <span class="toprow__n">${n}</span>
+    <span class="toprow__n num">${String(n).padStart(2, '0')}</span>
     <span class="toprow__art">${imgTag(a.poster || genPoster(title), title, title)}</span>
     <span class="toprow__info">
       <b>${esc(title)}</b>
@@ -128,11 +128,13 @@ export function topRowHTML(a, n) {
 /* ── rails ────────────────────────────────────────────── */
 let railSeq = 0;
 export function railHTML(title, inner, opts = {}) {
-  const { link = null, linkLabel = 'See all', wide = false, icon = null, id = `rail-${++railSeq}` } = opts;
+  const { link = null, linkLabel = 'All', wide = false, icon = null, idx = null, id = `rail-${++railSeq}` } = opts;
   return `
   <section class="section">
     <div class="section__head">
-      <div class="section__title">${icon ? svg(icon, 'section-icon') : ''}<h2>${esc(title)}</h2></div>
+      <div class="section__title">
+        ${idx != null ? `<span class="section__idx num">${String(idx).padStart(2, '0')}</span>` : ''}
+        ${icon ? svg(icon, 'section-icon') : ''}<h2>${esc(title)}</h2></div>
       <div class="section__more">
         ${link ? `<a class="section__link" href="${attr(link)}">${esc(linkLabel)} →</a>` : ''}
       </div>
@@ -175,9 +177,8 @@ export function errorState(msg, retryAttr = 'data-retry') {
 export function demoNotice() {
   return `<div class="notice" style="margin:1rem 0">
     ${svg(ICON.info)}
-    <div><b>Demo catalog.</b> The live metadata API (api.jikan.moe) isn't reachable from this browser right now,
-    so Kitsu Live is showing its bundled sample library. Everything else — search, filters, watchlist,
-    progress, the player — works exactly the same.</div>
+    <div><b>DEMO CATALOG —</b> the live metadata API (api.jikan.moe) isn't reachable from this browser,
+    so this is the bundled sample library. Search, filters, shelf, progress and the player all behave the same.</div>
   </div>`;
 }
 

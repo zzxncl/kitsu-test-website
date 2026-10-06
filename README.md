@@ -1,10 +1,13 @@
-# Kitsu Live
+# KITSU/LIVE
 
-A fast, keyboard-friendly anime discovery front-end. Browse, search, track what
-you're watching, and play episodes in a custom-built player — all in the
-browser, with no build step, no framework, and no account.
+An anime index with an ambient-light player. Browse, search, track what you're
+watching — all in the browser, with no build step, no framework, no account.
 
-Vanilla ES modules, hash routing, ~1,200 lines of hand-written CSS. Drop it on
+**Design:** editorial brutalism. Bone on ink, vermillion and acid, hairline
+rules, condensed poster type, hard-offset hovers, film grain and halftone.
+Sharp corners, no gradients, no glass.
+
+Vanilla ES modules, hash routing, ~1,450 lines of hand-written CSS. Drop it on
 any static host.
 
 ---
@@ -47,6 +50,27 @@ Export/import as JSON.
 **Settings** — theme, title language, playback defaults, data export/import,
 cache controls.
 
+### Ambient light
+
+The headline feature. Downscaled video frames are painted into two tiny
+canvases (40×23) sitting behind the player; CSS blurs them into a wash of
+colour that bleeds out past the frame and onto the page — the same idea as a
+backlit TV.
+
+Two stacked layers do the work: a wide soft wash for spill, and a tighter
+brighter core hugging the edge so the bleed reads as *light* rather than fog.
+It repaints at 8–15fps depending on mode (not every frame — there's no point,
+and it keeps the cost near zero), pauses with the video, and holds the last
+frame while paused so the glow doesn't snap off.
+
+Four modes — **off / soft / full / neon** — on the <kbd>A</kbd> key, the sun
+icon in the player bar, the player's settings menu, or Settings → Playback.
+
+Because it only ever *draws* frames and never reads pixels back, a
+cross-origin stream tainting the canvas costs nothing — it keeps working where
+a histogram-based approach would throw. If a decoder refuses `drawImage`
+outright, the glow disables itself quietly instead of erroring.
+
 ### The player
 
 Built from scratch on a plain `<video>` element:
@@ -63,8 +87,8 @@ Built from scratch on a plain `<video>` element:
 Keyboard: <kbd>Space</kbd>/<kbd>K</kbd> play, <kbd>←</kbd><kbd>→</kbd> seek 5s,
 <kbd>J</kbd><kbd>L</kbd> seek 10s, <kbd>↑</kbd><kbd>↓</kbd> volume,
 <kbd>M</kbd> mute, <kbd>F</kbd> fullscreen, <kbd>I</kbd> PiP,
-<kbd>N</kbd>/<kbd>P</kbd> next/previous episode, <kbd>0</kbd>–<kbd>9</kbd> jump
-to percent, <kbd>,</kbd>/<kbd>.</kbd> speed.
+<kbd>A</kbd> ambient light, <kbd>N</kbd>/<kbd>P</kbd> next/previous episode,
+<kbd>0</kbd>–<kbd>9</kbd> jump to percent, <kbd>,</kbd>/<kbd>.</kbd> speed.
 
 Site-wide: <kbd>/</kbd> search, <kbd>G</kbd> then <kbd>H</kbd>/<kbd>B</kbd>/<kbd>L</kbd>/<kbd>S</kbd>
 to navigate, <kbd>R</kbd> random, <kbd>T</kbd> theme, <kbd>?</kbd> for the full list.
@@ -93,13 +117,14 @@ servers: [
 
 `resolve()` may be async. Return `null` to show the "no source" screen.
 
-Three stubs ship by default:
+Four stubs ship by default:
 
 | Server | What it does |
 |---|---|
-| **Demo clip** | A public test HLS stream, so you can feel the player out immediately |
+| **Demo clip** | A 14s generated clip bundled in `video/demo.webm` — no network needed, and a good way to see the ambient light work |
+| **HLS test** | A public test stream, to exercise the hls.js path |
 | **Local file** | Looks for `video/ep-<n>.mp4` next to `index.html` |
-| **Custom** | Paste any direct `.mp4` / `.m3u8` URL on the watch page |
+| **Custom** | Paste any direct `.mp4` / `.m3u8` / `.webm` URL on the watch page |
 
 Point these at content you actually have the rights to serve.
 
@@ -151,6 +176,7 @@ js/
   toast.js            toasts + topbar load bar
   pages/              home, browse, info, watch, library, schedule, settings
 data/fallback.json    offline demo catalog
+video/demo.webm       bundled clip for the default player source
 ```
 
 Each route renders into its own container, so a slow page that's still
@@ -162,8 +188,10 @@ awaiting when you navigate away can't clobber the page that replaced it.
 
 - No dependencies. hls.js is pulled from a CDN only when an HLS stream is
   actually played.
-- Theme follows the system setting if you pick "Follow system"; otherwise it's
-  whatever you chose, remembered.
+- Two themes: **ink** (bone on near-black) and **paper** (inverted, like printed
+  stock). Follows the system setting if you pick "Follow system".
+- Type is Anton for display and Space Grotesk for everything else, both from
+  Google Fonts.
 - Respects `prefers-reduced-motion`, and there's a "reduce motion" toggle that
   also stops the hero auto-rotating.
 - Keyboard-navigable throughout, with focus rings, skip link and ARIA labels.

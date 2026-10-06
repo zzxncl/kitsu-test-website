@@ -18,12 +18,15 @@ route('/settings',    (c) => import('./pages/settings.js').then((m) => m.default
 
 /* ── theme ────────────────────────────────────────────── */
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+/* older saves used dark/light — fold them onto the current names */
+const THEME_ALIAS = { dark: 'ink', light: 'paper' };
 function applyTheme() {
-  const t = getSettings().theme;
-  const resolved = t === 'system' ? (prefersDark.matches ? 'dark' : 'light') : t;
+  const raw = getSettings().theme;
+  const t = THEME_ALIAS[raw] || raw;
+  const resolved = t === 'system' ? (prefersDark.matches ? 'ink' : 'paper') : t;
   document.documentElement.dataset.theme = resolved;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = resolved === 'dark' ? '#07070c' : '#f6f6fa';
+  if (meta) meta.content = resolved === 'ink' ? '#0b0b0c' : '#efece3';
   document.documentElement.classList.toggle('reduce-motion', !!getSettings().reduceMotion);
 }
 applyTheme();
@@ -31,7 +34,7 @@ prefersDark.addEventListener('change', () => { if (getSettings().theme === 'syst
 document.addEventListener('theme:apply', applyTheme);
 
 $('#themeBtn').addEventListener('click', () => {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  const next = document.documentElement.dataset.theme === 'ink' ? 'paper' : 'ink';
   setSetting('theme', next);
   applyTheme();
 });
@@ -227,6 +230,6 @@ onStoreChange((what) => { if (what === 'settings') applyTheme(); });
 startRouter();
 syncNav();
 
-console.info(`%c${CONFIG.appName}%c ready — press ? for shortcuts`,
-  'background:linear-gradient(120deg,#ff7a2f,#ff3d6e);color:#fff;padding:2px 7px;border-radius:5px;font-weight:700',
-  'color:#9aa0b4');
+console.info(`%c KITSU/LIVE %c press ? for shortcuts`,
+  'background:#ff3b18;color:#efece3;padding:3px 8px;font-weight:700;letter-spacing:.14em',
+  'color:#6b6961;padding-left:8px');

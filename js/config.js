@@ -33,12 +33,22 @@ export const CONFIG = {
     {
       id: 'demo',
       label: 'Demo clip',
-      kind: 'mp4',
-      note: 'Public-domain test video so you can feel the player out.',
+      kind: 'webm',
+      note: 'A short generated clip bundled with the site — no network needed. Good for seeing the ambient light work.',
+      resolve: () => ({
+        src: 'video/demo.webm',
+        type: 'video/webm',
+        intro: { start: 2, end: 6 },
+      }),
+    },
+    {
+      id: 'hls',
+      label: 'HLS test',
+      kind: 'hls',
+      note: 'A public test stream — exercises the hls.js path (needs network).',
       resolve: () => ({
         src: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
         type: 'application/x-mpegURL',
-        intro: { start: 4, end: 14 },
       }),
     },
     {
@@ -58,7 +68,7 @@ export const CONFIG = {
   ],
 
   defaults: {
-    theme: 'dark',
+    theme: 'ink',            // ink | paper | system
     autoplay: false,
     autoNext: true,
     skipIntro: true,
@@ -67,6 +77,7 @@ export const CONFIG = {
     muted: false,
     rate: 1,
     server: 'demo',
+    ambient: 'full',          // off | soft | full | neon
     reduceMotion: false,
     titleLang: 'romaji',   // 'romaji' | 'english'
   },

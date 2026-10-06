@@ -15,6 +15,7 @@ export default async function home({ mount }) {
       <div class="hero__stage">
         <div class="hero__slide is-active">
           <div class="hero__bg"><div class="sk sk--block" style="height:100%"></div></div>
+          <div class="hero__content"><div class="hero__inner"></div></div>
           <div class="hero__content"><div class="hero__inner" style="width:min(640px,100%)">
             <div class="sk sk--line w40" style="height:1rem"></div>
             <div class="sk sk--line w80" style="height:2.6rem"></div>
@@ -23,6 +24,7 @@ export default async function home({ mount }) {
         </div>
       </div>
     </section>
+    <div class="ticker" id="ticker"></div>
     <div class="quickchips" id="quickchips"></div>
     <div id="homeNotice" class="wrap"></div>
     <div id="homeRails">
@@ -67,7 +69,7 @@ export default async function home({ mount }) {
           <article class="hero__slide ${i === 0 ? 'is-active' : ''}" data-slide="${i}">
             <div class="hero__bg ${i === 0 ? 'is-zoom' : ''}">${imgTag(a.banner || a.poster || genPoster(t), '', t, { ratio: '16/9', eager: i === 0 })}</div>
             <div class="hero__content"><div class="hero__inner">
-              <p class="hero__eyebrow">${svg(ICON.fire)} #${i + 1} Spotlight${a.airing ? ' · Airing now' : ''}</p>
+              <p class="hero__eyebrow">SPOTLIGHT ${String(i + 1).padStart(2, '0')}${a.airing ? ' — ON AIR' : ''}</p>
               <h1 class="hero__title">${esc(t)}${a.titleEn && a.titleEn !== t ? `<small>${esc(a.titleEn)}</small>` : ''}</h1>
               <div class="hero__meta">
                 ${a.score ? `<span class="chip chip--score">${svg(ICON.star)}${a.score.toFixed(2)}</span>` : ''}
@@ -87,8 +89,8 @@ export default async function home({ mount }) {
           </article>`;
         }).join('')}
         <div class="hero__thumbs">
-          ${spotlight.map((a, i) => `<button class="hero__thumb ${i === 0 ? 'is-active' : ''}" data-dot="${i}"
-            aria-label="${attr(displayTitle(a))}">${imgTag(a.poster || genPoster(displayTitle(a)), '', displayTitle(a))}</button>`).join('')}
+          ${spotlight.map((a, i) => `<button class="hero__thumb num ${i === 0 ? 'is-active' : ''}" data-dot="${i}"
+            aria-label="${attr(displayTitle(a))}">${String(i + 1).padStart(2, '0')}</button>`).join('')}
         </div>
       </div>`;
 
@@ -116,6 +118,13 @@ export default async function home({ mount }) {
   renderHero();
 
   /* ── rails ─────────────────────────────────────────── */
+  const tickerEl = $('#ticker', mount);
+  if (tickerEl && trending.length) {
+    const run = trending.slice(0, 14).map((a) =>
+      `<b>${esc(displayTitle(a))}</b>${a.score ? ` ${a.score.toFixed(2)}` : ''}<i>◆</i>`).join('');
+    tickerEl.innerHTML = `<span class="ticker__run">${run}${run}</span>`;
+  }
+
   const railHost = $('#homeRails', mount);
 
   function renderResume() {
@@ -134,24 +143,24 @@ export default async function home({ mount }) {
   ]);
 
   railHost.innerHTML = `
-    ${railHTML('Continue watching', '', { id: 'railResume', wide: true, icon: ICON.clock, link: '#/library?tab=watching', linkLabel: 'Library' })}
+    ${railHTML('Continue watching', '', { id: 'railResume', wide: true, icon: ICON.clock, link: '#/library?tab=watching', linkLabel: 'Shelf', idx: 0 })}
     ${railHTML('Trending now', trending.map((a, i) => cardHTML(a, { rank: i + 1 })).join(''),
-      { link: '#/browse?sort=trending', icon: ICON.fire })}
+      { link: '#/browse?sort=trending', icon: ICON.fire, idx: 1 })}
     ${recent.length ? railHTML('Fresh episodes',
       recent.map((r) => episodeCardHTML(r.anime, r.episodes[0]?.num || 1,
         r.episodes[0]?.title || `Episode ${r.episodes[0]?.num || 1}`)).join(''),
-      { wide: true, icon: ICON.bolt }) : ''}
-    ${railHTML('This season', season.map((a) => cardHTML(a)).join(''), { link: '#/browse?season=now', icon: ICON.calendar })}
+      { wide: true, icon: ICON.bolt, idx: 2 }) : ''}
+    ${railHTML('This season', season.map((a) => cardHTML(a)).join(''), { link: '#/browse?season=now', icon: ICON.calendar, idx: 3 })}
     <section class="section">
       <div class="section__head">
-        <div class="section__title">${svg(ICON.star)}<h2>All-time highest rated</h2></div>
+        <div class="section__title"><span class="section__idx num">04</span>${svg(ICON.star)}<h2>All-time highest rated</h2></div>
         <div class="section__more"><a class="section__link" href="#/browse?orderBy=score">See all →</a></div>
       </div>
       <div class="toplist">${allTime.map((a, i) => topRowHTML(a, i + 1)).join('')}</div>
     </section>
-    ${railHTML('Most popular', topRated.map((a) => cardHTML(a)).join(''), { link: '#/browse?orderBy=members', icon: ICON.users })}
-    ${railHTML('Films worth the evening', movies.map((a) => cardHTML(a)).join(''), { link: '#/browse?type=movie', icon: ICON.film })}
-    ${railHTML('On the horizon', upcoming.map((a) => cardHTML(a)).join(''), { link: '#/browse?status=upcoming', icon: ICON.calendar })}`;
+    ${railHTML('Most popular', topRated.map((a) => cardHTML(a)).join(''), { link: '#/browse?orderBy=members', icon: ICON.users, idx: 5 })}
+    ${railHTML('Films worth the evening', movies.map((a) => cardHTML(a)).join(''), { link: '#/browse?type=movie', icon: ICON.film, idx: 6 })}
+    ${railHTML('On the horizon', upcoming.map((a) => cardHTML(a)).join(''), { link: '#/browse?status=upcoming', icon: ICON.calendar, idx: 7 })}`;
 
   renderResume();
   bindRails(mount);

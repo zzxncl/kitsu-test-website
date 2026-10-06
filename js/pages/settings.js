@@ -25,10 +25,10 @@ export default async function settings({ mount }) {
           <div class="panel">
             <h3>Appearance</h3>
             <div class="setting-row">
-              <div class="setting-row__text"><b>Theme</b><small>Dark is the default; light is there if you need it.</small></div>
+              <div class="setting-row__text"><b>Theme</b><small>Ink on bone, or inverted to paper stock.</small></div>
               <select class="select" data-set="theme">
-                <option value="dark" ${s.theme === 'dark' ? 'selected' : ''}>Dark</option>
-                <option value="light" ${s.theme === 'light' ? 'selected' : ''}>Light</option>
+                <option value="ink" ${s.theme === 'ink' || s.theme === 'dark' ? 'selected' : ''}>Ink</option>
+                <option value="paper" ${s.theme === 'paper' || s.theme === 'light' ? 'selected' : ''}>Paper</option>
                 <option value="system" ${s.theme === 'system' ? 'selected' : ''}>Follow system</option>
               </select>
             </div>
@@ -68,6 +68,15 @@ export default async function settings({ mount }) {
               <span class="switch__track"></span>
               <span class="switch__text"><b>Prefer dub</b><small>Default the audio toggle to dub where a server offers it.</small></span>
             </label>
+            <div class="setting-row">
+              <div class="setting-row__text"><b>Ambient light</b><small>Bleeds the picture's colour out around the player.</small></div>
+              <select class="select" data-set="ambient">
+                <option value="off"  ${s.ambient === 'off' ? 'selected' : ''}>Off</option>
+                <option value="soft" ${s.ambient === 'soft' ? 'selected' : ''}>Soft</option>
+                <option value="full" ${s.ambient === 'full' || !s.ambient ? 'selected' : ''}>Full</option>
+                <option value="neon" ${s.ambient === 'neon' ? 'selected' : ''}>Neon</option>
+              </select>
+            </div>
             <div class="setting-row">
               <div class="setting-row__text"><b>Default speed</b><small>Applies to every new episode.</small></div>
               <select class="select" data-set="rate">
