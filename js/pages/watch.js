@@ -186,7 +186,7 @@ export default async function watch({ mount, params, query }) {
           ${pct > 1 && !seen.has(e.num) ? `<span class="progress eprow__bar"><span style="width:${pct}%"></span></span>` : ''}
         </span>
       </a>`;
-    }).join('') || `<p style="color:var(--ink-3);font-size:.85rem;padding:.5rem">No episode matches that.</p>`;
+    }).join('') || `<p style="color:var(--fg-3);font-size:.85rem;padding:.5rem">No episode matches that.</p>`;
 
     const active = $('.eprow--side.is-active', mount);
     active?.scrollIntoView({ block: 'nearest' });
@@ -202,7 +202,7 @@ export default async function watch({ mount, params, query }) {
           <span class="ecard__pill">EP ${nextEp}</span><span class="card__play">${svg(ICON.play)}</span></div>
         <div class="ecard__body"><h3 class="ecard__title">${esc(episodes[idx + 1]?.title || `Episode ${nextEp}`)}</h3>
         <p class="ecard__sub">Episode ${nextEp}</p></div></a>`
-    : `<p style="color:var(--ink-3);font-size:.85rem">That's the last episode on file.${a.airing ? ' More are still airing.' : ''}</p>`;
+    : `<p style="color:var(--fg-3);font-size:.85rem">That's the last episode on file.${a.airing ? ' More are still airing.' : ''}</p>`;
 
   /* ── mark / library buttons ────────────────────────── */
   function renderBtns() {

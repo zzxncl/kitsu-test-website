@@ -64,7 +64,7 @@ export default async function browse({ mount, query }) {
             ${[9, 8.5, 8, 7.5, 7, 6].map((s) => `<option value="${s}" ${String(q.minScore) === String(s) ? 'selected' : ''}>${s}+</option>`).join('')}
           </select></div>
         <div class="filters__row" style="flex-direction:column;align-items:stretch;gap:.5rem">
-          <label style="font-size:.72rem;font-weight:680;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)">Genres</label>
+          <label style="font-size:.72rem;font-weight:680;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3)">Genres</label>
           <div class="genre-cloud" id="genreCloud">
             ${genres.map((g) => `<button type="button" class="genre-chip ${selGenres.has(String(g.id)) ? 'is-on' : ''}"
               data-genre="${g.id}" data-name="${attr(g.name)}">${esc(g.name)}</button>`).join('')}

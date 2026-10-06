@@ -103,7 +103,7 @@ export default async function info({ mount, params }) {
           <div class="statlist">
             ${a.relations.map((r) => `<div>
               <span class="statlist__k">${esc(r.relation)}</span>
-              <span class="statlist__v">${r.entries.map((e) => `<a href="#/anime/${e.id}" style="color:var(--ember)">${esc(e.title)}</a>`).join(', ')}</span>
+              <span class="statlist__v">${r.entries.map((e) => `<a href="#/anime/${e.id}" style="color:var(--accent)">${esc(e.title)}</a>`).join(', ')}</span>
             </div>`).join('')}
           </div>
         </div>` : ''}
@@ -114,7 +114,7 @@ export default async function info({ mount, params }) {
           ${a.score ? `<div class="scorebox">
             <div><div class="scorebox__big">${a.score.toFixed(2)}</div>
               ${starsHTML(a.score)}
-              <small style="color:var(--ink-3);font-size:.76rem">${fmtCount(a.scoredBy)} ratings</small>
+              <small style="color:var(--fg-3);font-size:.76rem">${fmtCount(a.scoredBy)} ratings</small>
             </div>
           </div><hr style="border:0;border-top:1px solid var(--line);margin:.9rem 0">` : ''}
           <div class="statlist">
@@ -142,7 +142,7 @@ export default async function info({ mount, params }) {
         ${a.external.length ? `<div class="panel"><h3>Elsewhere</h3>
           <div class="statlist">${a.external.slice(0, 8).map((e) =>
             `<div><span class="statlist__k">${esc(e.name)}</span>
-             <span class="statlist__v"><a href="${attr(e.url)}" target="_blank" rel="noopener" style="color:var(--ember)">Open ${svg(ICON.external)}</a></span></div>`).join('')}
+             <span class="statlist__v"><a href="${attr(e.url)}" target="_blank" rel="noopener" style="color:var(--accent)">Open ${svg(ICON.external)}</a></span></div>`).join('')}
           </div></div>` : ''}
 
         <div class="panel"><h3>Your progress</h3>
@@ -197,10 +197,10 @@ export default async function info({ mount, params }) {
     const lw = lastWatchedEp(a.id);
     host.innerHTML = `
       ${total ? `<div class="progress" style="height:6px;margin-bottom:.6rem"><span style="width:${pct.toFixed(1)}%"></span></div>` : ''}
-      <p style="font-size:.85rem;color:var(--ink-2)">
+      <p style="font-size:.85rem;color:var(--fg-2)">
         ${seen.size ? `${seen.size}${total ? ` of ${total}` : ''} episodes watched` : 'Nothing watched yet'}
       </p>
-      ${lw ? `<p style="font-size:.8rem;color:var(--ink-3);margin-top:.2rem">Last: episode ${lw.ep}</p>` : ''}
+      ${lw ? `<p style="font-size:.8rem;color:var(--fg-3);margin-top:.2rem">Last: episode ${lw.ep}</p>` : ''}
       <div style="display:flex;gap:.4rem;margin-top:.8rem;flex-wrap:wrap">
         ${total ? `<button class="btn btn--ghost btn--sm" id="markAll">Mark all watched</button>` : ''}
         ${seen.size ? `<button class="btn btn--danger btn--sm" id="clearProg">${svg(ICON.trash)} Reset</button>` : ''}
@@ -235,7 +235,7 @@ export default async function info({ mount, params }) {
       }
     }
     if (!epCache.length) {
-      host.innerHTML = `<p style="color:var(--ink-3);font-size:.88rem">
+      host.innerHTML = `<p style="color:var(--fg-3);font-size:.88rem">
         No episode list published yet${a.status === 'Not yet aired' ? ' — this one hasn’t aired.' : '.'}</p>`;
       return;
     }

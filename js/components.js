@@ -65,7 +65,7 @@ export function cardHTML(a, opts = {}) {
     <div class="card__body">
       <h3 class="card__title">${esc(title)}</h3>
       <p class="card__meta">${metaBits.map((b, i) => (i ? `<i>•</i>${esc(b)}` : esc(b))).join('')}</p>
-      ${seen && showProgress ? `<p class="card__meta" style="color:var(--ember)">${seen.done ? `Ep ${seen.ep} done` : `Ep ${seen.ep} · ${fmtTime(seen.position)}`}</p>` : ''}
+      ${seen && showProgress ? `<p class="card__meta" style="color:var(--accent)">${seen.done ? `Ep ${seen.ep} done` : `Ep ${seen.ep} · ${fmtTime(seen.position)}`}</p>` : ''}
     </div>
   </a>`;
 }

@@ -99,7 +99,7 @@ function historyPanel() {
   openSuggest(`
     <div class="suggest__head"><span>Recent searches</span></div>
     ${hist.map((h) => `<button class="suggest__row" data-q="${attr(h)}">
-      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--ink-3)">${svg(ICON.clock)}</span>
+      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--fg-3)">${svg(ICON.clock)}</span>
       <span class="suggest__meta"><b>${esc(h)}</b><small>search again</small></span></button>`).join('')}`);
 }
 
@@ -122,7 +122,7 @@ const runSuggest = debounce(async (q) => {
         </span></button>`;
     }).join('')}
     <button class="suggest__row" data-all="1">
-      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--ember)">${svg(ICON.search)}</span>
+      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--accent)">${svg(ICON.search)}</span>
       <span class="suggest__meta"><b>See all results for “${esc(q)}”</b><small>full search with filters</small></span>
     </button>`);
 }, 320);

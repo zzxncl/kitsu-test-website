@@ -77,6 +77,11 @@ export default async function settings({ mount }) {
                 <option value="neon" ${s.ambient === 'neon' ? 'selected' : ''}>Neon</option>
               </select>
             </div>
+            <label class="switch">
+              <input type="checkbox" data-set="ambientFlood" ${s.ambientFlood !== false ? 'checked' : ''}>
+              <span class="switch__track"></span>
+              <span class="switch__text"><b>Flood the whole page</b><small>Lets the glow wash behind the entire site, not just the player frame.</small></span>
+            </label>
             <div class="setting-row">
               <div class="setting-row__text"><b>Default speed</b><small>Applies to every new episode.</small></div>
               <select class="select" data-set="rate">
@@ -93,14 +98,14 @@ export default async function settings({ mount }) {
 
           <div class="panel">
             <h3>Sources</h3>
-            <p style="font-size:.86rem;color:var(--ink-2);margin-bottom:.8rem">
+            <p style="font-size:.86rem;color:var(--fg-2);margin-bottom:.8rem">
               Kitsu Live hosts no video. Each server below is a resolver stub in
               <code>js/config.js</code> — point them wherever you have the rights to play from.
             </p>
             <div class="statlist">
               ${CONFIG.servers.map((sv) => `<div>
                 <span class="statlist__k">${esc(sv.label)}</span>
-                <span class="statlist__v" style="font-size:.8rem;color:var(--ink-3)">${esc(sv.note || sv.kind)}</span>
+                <span class="statlist__v" style="font-size:.8rem;color:var(--fg-3)">${esc(sv.note || sv.kind)}</span>
               </div>`).join('')}
             </div>
             <div class="notice notice--info" style="margin-top:.9rem">
@@ -112,7 +117,7 @@ export default async function settings({ mount }) {
 
           <div class="panel">
             <h3>Your data</h3>
-            <p style="font-size:.86rem;color:var(--ink-2)">
+            <p style="font-size:.86rem;color:var(--fg-2)">
               ${getListArray().length} titles in your library · ${getHistory().length} saved searches.
             </p>
             <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.9rem">

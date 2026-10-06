@@ -63,8 +63,18 @@ It repaints at 8–15fps depending on mode (not every frame — there's no point
 and it keeps the cost near zero), pauses with the video, and holds the last
 frame while paused so the glow doesn't snap off.
 
+It doesn't stop at the player frame. A second fixed, viewport-sized copy of
+the same frame sits behind the entire document at `z-index: -1`, so the
+picture lights the whole site — and while watching, the topbar, panels and
+footer go translucent so the colour reads *through* the chrome instead of
+stopping at it. The page layer runs dimmer and softer than the frame glow,
+and text sitting directly on the lit background gets a backing shadow, so
+body copy survives a bright scene.
+
 Four modes — **off / soft / full / neon** — on the <kbd>A</kbd> key, the sun
 icon in the player bar, the player's settings menu, or Settings → Playback.
+<kbd>Shift</kbd>+<kbd>A</kbd> toggles the page-wide flood on its own, keeping
+the glow to the frame.
 
 Because it only ever *draws* frames and never reads pixels back, a
 cross-origin stream tainting the canvas costs nothing — it keeps working where
@@ -87,7 +97,7 @@ Built from scratch on a plain `<video>` element:
 Keyboard: <kbd>Space</kbd>/<kbd>K</kbd> play, <kbd>←</kbd><kbd>→</kbd> seek 5s,
 <kbd>J</kbd><kbd>L</kbd> seek 10s, <kbd>↑</kbd><kbd>↓</kbd> volume,
 <kbd>M</kbd> mute, <kbd>F</kbd> fullscreen, <kbd>I</kbd> PiP,
-<kbd>A</kbd> ambient light, <kbd>N</kbd>/<kbd>P</kbd> next/previous episode,
+<kbd>A</kbd> ambient light, <kbd>Shift</kbd>+<kbd>A</kbd> page flood, <kbd>N</kbd>/<kbd>P</kbd> next/previous episode,
 <kbd>0</kbd>–<kbd>9</kbd> jump to percent, <kbd>,</kbd>/<kbd>.</kbd> speed.
 
 Site-wide: <kbd>/</kbd> search, <kbd>G</kbd> then <kbd>H</kbd>/<kbd>B</kbd>/<kbd>L</kbd>/<kbd>S</kbd>

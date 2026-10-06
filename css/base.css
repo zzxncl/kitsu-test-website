@@ -59,9 +59,13 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 
+/* the root paints the page colour so the fixed ambient layer (z-index:-1)
+   can sit above it while still being behind every bit of content */
+html { background: var(--bg); }
+
 body {
   font-family: var(--sans);
-  background: var(--bg);
+  background: transparent;
   color: var(--fg);
   line-height: 1.45;
   min-height: 100dvh;

@@ -25,6 +25,24 @@ async function loadHls() {
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
+/** The page-wide glow layer. One per document, created on first use. */
+function ensureStage() {
+  let stage = document.getElementById('ambStage');
+  if (!stage) {
+    stage = document.createElement('div');
+    stage.id = 'ambStage';
+    stage.className = 'amb-stage';
+    stage.setAttribute('aria-hidden', 'true');
+    stage.innerHTML = '<canvas width="40" height="23"></canvas>';
+    document.body.prepend(stage);
+  }
+  return stage;
+}
+function teardownStage() {
+  document.getElementById('ambStage')?.classList.remove('is-on');
+  document.body.classList.remove('is-flooded');
+}
+
 export function createPlayer(mount, ctx) {
   const s = getSettings();
   const st = {
@@ -72,10 +90,12 @@ export function createPlayer(mount, ctx) {
   };
   const AMB_ORDER = ['off', 'soft', 'full', 'neon'];
 
+  const stage = ensureStage();
   const amb = {
     mode: AMB[getSettings().ambient] !== undefined ? getSettings().ambient : 'full',
+    flood: getSettings().ambientFlood !== false,
     raf: null, last: 0, broken: false,
-    canvases: $$('.pl-amb', wrap),
+    canvases: [...$$('.pl-amb', wrap), $('canvas', stage)],
   };
   amb.ctxs = amb.canvases.map((c) => c.getContext('2d', { alpha: false }));
 
@@ -87,7 +107,15 @@ export function createPlayer(mount, ctx) {
       wrap.style.setProperty('--amb-opacity', cfg.opacity);
       wrap.style.setProperty('--amb-blur', `${cfg.blur}px`);
       wrap.style.setProperty('--amb-sat', cfg.sat);
+      /* the page layer runs dimmer and softer than the frame glow, so it
+         lights the room without washing out body copy */
+      stage.style.setProperty('--amb-page-opacity', (cfg.opacity * 0.34).toFixed(2));
+      stage.style.setProperty('--amb-page-blur', `${Math.round(cfg.blur * 1.2)}px`);
+      stage.style.setProperty('--amb-sat', cfg.sat);
     }
+    const flooding = live && amb.flood;
+    stage.classList.toggle('is-on', flooding);
+    document.body.classList.toggle('is-flooded', flooding);
     $('[data-act="amb"]', root)?.classList.toggle('is-on', live);
     live && !video.paused ? ambStart() : ambStop();
     if (live) ambPaint();          // one frame now, so a paused video still glows
@@ -127,6 +155,12 @@ export function createPlayer(mount, ctx) {
   }
   function ambCycle() {
     ambSet(AMB_ORDER[(AMB_ORDER.indexOf(amb.mode) + 1) % AMB_ORDER.length]);
+  }
+  function ambFlood(on) {
+    amb.flood = on;
+    setSetting('ambientFlood', on);
+    ambApply();
+    toast(on ? 'Ambient light floods the page' : 'Ambient light kept to the player', 'info', 1800);
   }
 
   /* ── source loading ────────────────────────────────── */
@@ -433,6 +467,8 @@ export function createPlayer(mount, ctx) {
         <div class="pl-menu__label">Ambient light</div>
         ${AMB_ORDER.map((m) => `<button class="pl-menu__item ${amb.mode === m ? 'is-on' : ''}" data-amb="${m}">
           ${m === 'off' ? 'Off' : m[0].toUpperCase() + m.slice(1)}<span class="tick">${svg(ICON.check)}</span></button>`).join('')}
+        <button class="pl-menu__item ${amb.flood ? 'is-on' : ''}" data-ambflood="1">
+          Flood whole page<span class="tick">${svg(ICON.check)}</span></button>
       </div>
       <div class="pl-menu__group">
         <div class="pl-menu__label">Behaviour</div>
@@ -447,6 +483,7 @@ export function createPlayer(mount, ctx) {
       const f = e.target.closest('[data-flag]');
       const am = e.target.closest('[data-amb]');
       if (am) { ambSet(am.dataset.amb); openMenu(); }
+      if (e.target.closest('[data-ambflood]')) { ambFlood(!amb.flood); openMenu(); }
       if (r) { video.playbackRate = Number(r.dataset.rate); openMenu(); }
       if (l && st.hls) { st.hls.currentLevel = Number(l.dataset.level); openMenu(); }
       if (f) { setSetting(f.dataset.flag, !getSettings()[f.dataset.flag]); openMenu(); }
@@ -483,7 +520,8 @@ export function createPlayer(mount, ctx) {
       ArrowUp: () => { video.muted = false; video.volume = clamp(video.volume + 0.1, 0, 1); },
       ArrowDown: () => { video.volume = clamp(video.volume - 0.1, 0, 1); },
       m: () => { video.muted = !video.muted; },
-      f: () => toggleFull(), i: () => togglePip(), a: () => ambCycle(),
+      f: () => toggleFull(), i: () => togglePip(),
+      a: () => (e.shiftKey ? ambFlood(!amb.flood) : ambCycle()),
       n: () => ctx.nextEp && ctx.onNext?.(ctx.nextEp),
       p: () => ctx.prevEp && ctx.onPrev?.(ctx.prevEp),
       ',': () => { video.playbackRate = RATES[clamp(RATES.indexOf(video.playbackRate) - 1, 0, RATES.length - 1)]; },
@@ -507,6 +545,7 @@ export function createPlayer(mount, ctx) {
       st.destroyed = true;
       persist();
       ambStop();
+      teardownStage();
       clearTimeout(st.idleTimer); clearTimeout(st.saveTimer); clearInterval(nextTimer);
       window.removeEventListener('keydown', onKey);
       teardownHls();

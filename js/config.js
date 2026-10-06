@@ -78,6 +78,7 @@ export const CONFIG = {
     rate: 1,
     server: 'demo',
     ambient: 'full',          // off | soft | full | neon
+    ambientFlood: true,       // let the glow wash the whole page, not just the frame
     reduceMotion: false,
     titleLang: 'romaji',   // 'romaji' | 'english'
   },
