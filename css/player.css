@@ -36,12 +36,13 @@
 
 .srvbar {
   display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
-  padding: .6rem .7rem; border: var(--hair) solid var(--line); background: var(--bg-2);
+  padding: .6rem .7rem; border: var(--bd) solid var(--line);
+  background: var(--bg-2); border-radius: var(--r-lg);
 }
 .srvbar__label { font-size: .58rem; font-weight: 700; letter-spacing: .18em; color: var(--fg-3); }
 .srvbar__group { display: flex; }
 .srvbtn {
-  padding: .3rem .7rem;
+  padding: .3rem .7rem; border-radius: var(--r);
   font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
   color: var(--fg-3); border: var(--hair) solid var(--line); margin-right: -1px;
   transition: all var(--fast);
@@ -50,109 +51,56 @@
 .srvbtn.is-on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); position: relative; z-index: 1; }
 .srvbar .spacer { margin-left: auto; }
 
-/* ══ PAGE FLOOD ══════════════════════════════════════════
-   A fixed, viewport-sized copy of the same frame sits behind the entire
-   document, so the picture lights the whole site and not just its own
-   frame. The canvas is 40x23 — the browser's own upscaling does most of
-   the smoothing, which keeps the blur cheap enough to repaint live. */
-.amb-stage {
-  position: fixed; inset: -18%; z-index: -1;
-  pointer-events: none; opacity: 0;
-  filter: blur(var(--amb-page-blur, 90px)) saturate(var(--amb-sat, 2.4)) brightness(.6);
-  transition: opacity .9s var(--ease);
-  will-change: opacity;
-}
-.amb-stage.is-on { opacity: var(--amb-page-opacity, .6); }
-.amb-stage canvas { width: 100%; height: 100%; display: block; }
-
-/* While watching, surfaces go translucent so the light reads through the
-   chrome instead of stopping at it. */
-body.is-flooded .topbar {
+/* The module injects its own glow CSS. What belongs to the SITE is this:
+   while the page is flooded, surfaces go translucent so the colour reads
+   through the chrome instead of stopping at it. */
+.ambl-flooded .topbar {
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   backdrop-filter: blur(16px) saturate(1.3);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
 }
-body.is-flooded .panel,
-body.is-flooded .srvbar,
-body.is-flooded .filters {
+.ambl-flooded .panel,
+.ambl-flooded .srvbar,
+.ambl-flooded .filters {
   background: color-mix(in srgb, var(--bg) 58%, transparent);
   backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
 }
-body.is-flooded .footer,
-body.is-flooded .tabbar {
+.ambl-flooded .footer,
+.ambl-flooded .tabbar {
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
-body.is-flooded .input,
-body.is-flooded .select { background: color-mix(in srgb, var(--bg-2) 55%, transparent); }
-body.is-flooded .eplist--side { background: transparent; }
+.ambl-flooded .input,
+.ambl-flooded .select { background: color-mix(in srgb, var(--bg-2) 55%, transparent); }
 
-/* Text sitting straight on the lit background needs its own backing, or it
-   dissolves whenever the picture turns bright. Muted greys get lifted too —
-   fg-3 has nothing left to give once there's colour behind it. */
-body.is-flooded .watch__crumbs,
-body.is-flooded .watch__titlebar p,
-body.is-flooded .section__link,
-body.is-flooded .card__meta,
-body.is-flooded .ecard__sub { color: var(--fg-2); text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
-body.is-flooded .watch__titlebar h1,
-body.is-flooded .section__title h2,
-body.is-flooded .card__title,
-body.is-flooded .ecard__title { text-shadow: 0 0 20px var(--bg), 0 0 6px var(--bg); }
-body.is-flooded .watch__crumbs a:hover { color: var(--accent); }
+/* Text on the lit background needs its own backing or it dissolves when the
+   picture turns bright; muted greys have nothing left to give once there is
+   colour behind them. */
+.ambl-flooded .watch__crumbs,
+.ambl-flooded .watch__titlebar p,
+.ambl-flooded .section__link,
+.ambl-flooded .card__meta,
+.ambl-flooded .ecard__sub { color: var(--fg-2); text-shadow: 0 0 12px var(--bg), 0 0 4px var(--bg); }
+.ambl-flooded .watch__titlebar h1,
+.ambl-flooded .section__title h2,
+.ambl-flooded .card__title,
+.ambl-flooded .ecard__title { text-shadow: 0 0 20px var(--bg), 0 0 6px var(--bg); }
 
-/* a light page can't take the same wash — halve it again */
-:root[data-theme="paper"] .amb-stage {
-  filter: blur(var(--amb-page-blur, 90px)) saturate(1.5) brightness(1.08);
-  opacity: 0;
-}
-:root[data-theme="paper"] .amb-stage.is-on { opacity: calc(var(--amb-page-opacity, .34) * .5); }
-:root[data-theme="paper"] body.is-flooded .topbar,
-:root[data-theme="paper"] body.is-flooded .panel { background: color-mix(in srgb, var(--bg) 80%, transparent); }
+/* a light page cannot take the same wash */
+:root[data-theme="paper"] .ambl-stage,
+:root[data-skin="linen"] .ambl-stage { filter: blur(var(--ambl-page-blur,95px)) saturate(1.5) brightness(1.06); }
+:root[data-theme="paper"] .ambl-stage.ambl-on { opacity: calc(var(--ambl-page-opacity,.34) * .5); }
 
-/* ══ AMBIENT LIGHT ═══════════════════════════════════════
-   A tiny canvas is painted with downscaled video frames, then
-   blown up and blurred so colour bleeds out around the player —
-   the same trick as a backlit TV. Two stacked layers: a tight
-   bright core and a wide soft wash. */
 .player-wrap { position: relative; isolation: isolate; }
-
-.pl-amb {
-  position: absolute; z-index: 0; pointer-events: none;
-  opacity: 0; transition: opacity .6s var(--ease);
-  will-change: opacity;
-}
-.player-wrap.amb-on .pl-amb { opacity: var(--amb-opacity, 1); }
-
-/* wide wash — spills well past the frame */
-.pl-amb--wash {
-  inset: -14% -9%;
-  filter: blur(var(--amb-blur, 72px)) saturate(var(--amb-sat, 2.4)) brightness(1.1);
-  transform: scaleY(1.06);
-}
-/* tight core — hugs the edge, makes the bleed read as light not fog */
-.pl-amb--core {
-  inset: -3% -2%;
-  filter: blur(calc(var(--amb-blur, 72px) * .42)) saturate(var(--amb-sat, 2.4)) brightness(1.2);
-  opacity: 0;
-}
-.player-wrap.amb-on .pl-amb--core { opacity: calc(var(--amb-opacity, 1) * .55); }
-.pl-amb canvas, canvas.pl-amb { width: 100%; height: 100%; display: block; }
-
-/* the frame mask: keeps the glow from washing over the video itself */
-.player-wrap::after {
-  content: ""; position: absolute; inset: 0; z-index: 1;
-  pointer-events: none; background: var(--bg);
-  opacity: 0;
-}
 
 .player {
   position: relative; z-index: 2;
   width: 100%; aspect-ratio: 16/9;
   background: #000; overflow: hidden;
-  border: var(--hair) solid var(--line-2);
+  border: var(--bd) solid var(--line-2);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-hi);
   user-select: none; -webkit-user-select: none;
 }
 .player.is-theater { border-left: 0; border-right: 0; }
@@ -201,7 +149,7 @@ body.is-flooded .watch__crumbs a:hover { color: var(--accent); }
   font-size: .55rem; font-weight: 700; letter-spacing: .16em; color: var(--acid);
   opacity: 0; transition: opacity var(--mid);
 }
-.player-wrap.amb-on .pl-top__amb { opacity: .85; }
+.player-wrap.ambl-on .pl-top__amb { opacity: .85; }
 .pl-top__amb i { width: 5px; height: 5px; background: var(--acid); font-style: normal; animation: blink 1.6s steps(2) infinite; }
 
 .pl-center-hint {

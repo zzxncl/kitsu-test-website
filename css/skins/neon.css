@@ -1,0 +1,51 @@
+/* SKIN: NEON — late-night arcade. Black glass, magenta and cyan,
+   thin glowing edges, monospace data. Pairs hardest with ambient light. */
+:root[data-skin="neon"] {
+  --bg: #05050b; --bg-2: #0b0b16; --bg-3: #141426;
+  --fg: #eaf2ff; --fg-2: #8f9bc4; --fg-3: #5d678c;
+  --line: rgba(0,229,255,.18); --line-2: rgba(255,0,160,.45);
+  --accent: #ff00a0; --acid: #00e5ff; --shu: #ff00a0; --cyan: #00e5ff;
+  --on-accent: #05050b;
+
+  --r: 2px; --r-lg: 3px; --r-pill: 2px; --bd: 1px;
+  --shadow: 0 0 0 1px rgba(0,229,255,.08);
+  --shadow-hi: 0 0 22px -2px rgba(255,0,160,.55), 0 0 60px -10px rgba(0,229,255,.4);
+  --panel-bg: color-mix(in srgb, var(--bg-2) 72%, transparent);
+  --panel-blur: 8px;
+
+  --head-font: "Archivo Black", "Arial Black", sans-serif;
+  --head-transform: uppercase; --head-tracking: -.02em;
+  --head-weight: 400; --head-lh: .92;
+  --lbl-transform: uppercase; --lbl-tracking: .22em; --lbl-weight: 700;
+  --mono: "Space Mono", ui-monospace, monospace;
+
+  --card-lift: -3px; --card-slab: 0px; --card-slab-op: 0; --card-scale: 1.04;
+  --card-img: saturate(1.6) contrast(1.2) brightness(.55);
+}
+:root[data-skin="neon"] .lbl, :root[data-skin="neon"] .kicker,
+:root[data-skin="neon"] .card__meta, :root[data-skin="neon"] .chip,
+:root[data-skin="neon"] .section__idx, :root[data-skin="neon"] .eprow__n,
+:root[data-skin="neon"] .topnav a { font-family: "Space Mono", monospace; }
+:root[data-skin="neon"] h1, :root[data-skin="neon"] .hero__title {
+  text-shadow: 0 0 28px rgba(255,0,160,.5), 0 0 60px rgba(0,229,255,.25);
+}
+:root[data-skin="neon"] .brand__text { text-shadow: 0 0 18px rgba(255,0,160,.7); }
+:root[data-skin="neon"] .card:hover .card__art,
+:root[data-skin="neon"] .ecard:hover .ecard__art { border-color: var(--acid); }
+:root[data-skin="neon"] .btn--primary { box-shadow: 0 0 18px -2px rgba(255,0,160,.7); }
+:root[data-skin="neon"] .grain { opacity: .04; }
+/* scanlines */
+:root[data-skin="neon"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: 399; pointer-events: none; opacity: .4;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.28) 2px 3px);
+}
+:root[data-skin="neon"][data-theme="paper"] {
+  --bg: #f2f0ff; --bg-2: #ffffff; --bg-3: #e8e5ff;
+  --fg: #12072a; --fg-2: #4b3b72; --fg-3: #7b6ca3;
+  --line: rgba(120,0,200,.18); --line-2: rgba(255,0,160,.5);
+  --accent: #d6008a; --acid: #0091b0; --on-accent: #ffffff;
+  --shadow-hi: 0 0 24px -6px rgba(214,0,138,.45);
+}
+:root[data-skin="neon"][data-theme="paper"] body::before { opacity: .12; }
+:root[data-skin="neon"][data-theme="paper"] h1,
+:root[data-skin="neon"][data-theme="paper"] .hero__title { text-shadow: none; }

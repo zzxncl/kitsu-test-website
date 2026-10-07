@@ -3,9 +3,20 @@
 An anime index with an ambient-light player. Browse, search, track what you're
 watching — all in the browser, with no build step, no framework, no account.
 
-**Design:** editorial brutalism. Bone on ink, vermillion and acid, hairline
-rules, condensed poster type, hard-offset hovers, film grain and halftone.
-Sharp corners, no gradients, no glass.
+**Five skins**, switchable live — press <kbd>K</kbd> for the picker or
+<kbd>S</kbd> to cycle:
+
+| Skin | Look |
+|---|---|
+| **Press** | Editorial brutalism. Hairline rules, condensed poster type, hard-offset hovers. |
+| **Vault** | The modern streaming look, done carefully. Deep slate, soft depth, one electric accent. |
+| **Neon** | Late-night arcade. Black glass, magenta and cyan, scanlines. Hits hardest with ambient light. |
+| **Linen** | Warm paper and an italic serif. A reading room rather than a dashboard. |
+| **Noir** | Cinema. Pure greyscale, one blood accent, chrome almost absent. |
+
+Each is one small file in `css/skins/` that overrides a set of surface
+variables — radius, border weight, shadow, fonts, card hover, panel fill —
+declared in `css/base.css`. Adding a sixth is a copy and a palette.
 
 Vanilla ES modules, hash routing, ~1,450 lines of hand-written CSS. Drop it on
 any static host.
@@ -50,12 +61,36 @@ Export/import as JSON.
 **Settings** — theme, title language, playback defaults, data export/import,
 cache controls.
 
-### Ambient light
+### Ambient light — `ambient-light.js`
 
-The headline feature. Downscaled video frames are painted into two tiny
-canvases (40×23) sitting behind the player; CSS blurs them into a wash of
-colour that bleeds out past the frame and onto the page — the same idea as a
-backlit TV.
+**This is a standalone file you can drop into any site.** No dependencies, no
+stylesheet to copy, no build step. Open `ambient-light.html` for a live demo
+and the docs.
+
+```html
+<script src="ambient-light.js"></script>
+<script>
+  const amb = AmbientLight.attach('video');
+</script>
+```
+
+That's the whole integration. It injects its own CSS, wraps the video itself,
+and starts and stops with playback. The site you're reading about uses this
+exact file — there is no second copy to drift out of sync.
+
+```js
+new AmbientLight(video, {
+  mode: 'full',           // 'off' | 'soft' | 'full' | 'neon' | {custom}
+  flood: true,            // also light the page behind the whole document
+  floodStrategy: 'auto',  // 'behind' | 'overlay' | 'auto'
+  target: null,           // container to glow around (default: wraps the video)
+});
+// amb.setMode('neon'); amb.cycle(); amb.setFlood(false); amb.destroy();
+```
+
+Downscaled video frames are painted into tiny canvases (40×23) sitting behind
+the player; CSS blurs them into a wash of colour that bleeds out past the
+frame and onto the page — the same idea as a backlit TV.
 
 Two stacked layers do the work: a wide soft wash for spill, and a tighter
 brighter core hugging the edge so the bleed reads as *light* rather than fog.
@@ -64,12 +99,20 @@ and it keeps the cost near zero), pauses with the video, and holds the last
 frame while paused so the glow doesn't snap off.
 
 It doesn't stop at the player frame. A second fixed, viewport-sized copy of
-the same frame sits behind the entire document at `z-index: -1`, so the
-picture lights the whole site — and while watching, the topbar, panels and
-footer go translucent so the colour reads *through* the chrome instead of
-stopping at it. The page layer runs dimmer and softer than the frame glow,
-and text sitting directly on the lit background gets a backing shadow, so
-body copy survives a bright scene.
+the same frame sits behind the entire document, so the picture lights the
+whole site — and while watching, the topbar, panels and footer go translucent
+so the colour reads *through* the chrome instead of stopping at it.
+
+A layer at `z-index: -1` is invisible if `<body>` paints an opaque background
+over it, which most sites do. On `auto` the module detects that and moves the
+colour up to `<html>` — the page looks identical and the glow has somewhere to
+live. If it can't do that safely it falls back to an `overlay` layer using
+`mix-blend-mode: screen`, which works anywhere. Verified against a page built
+with no knowledge of the module.
+
+The page layer runs dimmer and softer than the frame glow, and text sitting
+directly on the lit background gets a backing shadow, so body copy survives a
+bright scene.
 
 Four modes — **off / soft / full / neon** — on the <kbd>A</kbd> key, the sun
 icon in the player bar, the player's settings menu, or Settings → Playback.
@@ -169,8 +212,11 @@ and no account. Settings → **Export backup** writes the lot to a JSON file;
 
 ```
 index.html            markup shell: topbar, drawer, footer, tab bar, modals
+ambient-light.js      THE DROP-IN MODULE — copy this into any site
+ambient-light.html    live demo + docs for the module
 css/
-  base.css            design tokens, both themes, reset
+  base.css            design tokens, skin surface variables, reset
+  skins/*.css         the five skins
   layout.css          topbar, nav, drawer, footer, mobile tab bar
   components.css      cards, rails, chips, buttons, skeletons, toasts, modal
   pages.css           hero, browse, detail, schedule, library, settings

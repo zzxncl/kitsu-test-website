@@ -1,0 +1,26 @@
+/* SKIN: PRESS — editorial brutalism. Bone on ink, hairline rules,
+   condensed poster type, hard-offset hovers. (The base defaults.) */
+:root[data-skin="press"] {
+  --ink: #0b0b0c; --bg: #0b0b0c; --bg-2: #131315; --bg-3: #1c1c1f;
+  --fg: #efece3; --fg-2: #9c998f; --fg-3: #6b6961;
+  --line: rgba(239,236,227,.15); --line-2: rgba(239,236,227,.32);
+  --accent: #ff3b18; --acid: #ccff00; --on-accent: #0b0b0c;
+
+  --r: 0px; --r-lg: 0px; --r-pill: 0px; --bd: 1px;
+  --shadow: none; --shadow-hi: none;
+  --panel-bg: var(--bg); --panel-blur: 0px;
+
+  --head-font: "Anton", "Arial Narrow", Impact, sans-serif;
+  --head-transform: uppercase; --head-tracking: .005em;
+  --head-weight: 400; --head-lh: .94;
+  --lbl-transform: uppercase; --lbl-tracking: .15em; --lbl-weight: 700;
+
+  --card-lift: -5px; --card-slab: 10px; --card-slab-op: 1; --card-scale: 1;
+  --card-img: grayscale(1) contrast(1.25) brightness(.55);
+}
+:root[data-skin="press"][data-theme="paper"] {
+  --bg: #efece3; --bg-2: #e6e2d7; --bg-3: #dcd7ca;
+  --fg: #0b0b0c; --fg-2: #4a4840; --fg-3: #76736a;
+  --line: rgba(11,11,12,.18); --line-2: rgba(11,11,12,.42);
+  --on-accent: #efece3;
+}

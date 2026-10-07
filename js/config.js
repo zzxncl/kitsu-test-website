@@ -68,6 +68,7 @@ export const CONFIG = {
   ],
 
   defaults: {
+    skin: 'press',           // press | vault | neon | linen | noir
     theme: 'ink',            // ink | paper | system
     autoplay: false,
     autoNext: true,

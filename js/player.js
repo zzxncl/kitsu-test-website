@@ -25,24 +25,6 @@ async function loadHls() {
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
-/** The page-wide glow layer. One per document, created on first use. */
-function ensureStage() {
-  let stage = document.getElementById('ambStage');
-  if (!stage) {
-    stage = document.createElement('div');
-    stage.id = 'ambStage';
-    stage.className = 'amb-stage';
-    stage.setAttribute('aria-hidden', 'true');
-    stage.innerHTML = '<canvas width="40" height="23"></canvas>';
-    document.body.prepend(stage);
-  }
-  return stage;
-}
-function teardownStage() {
-  document.getElementById('ambStage')?.classList.remove('is-on');
-  document.body.classList.remove('is-flooded');
-}
-
 export function createPlayer(mount, ctx) {
   const s = getSettings();
   const st = {
@@ -78,86 +60,38 @@ export function createPlayer(mount, ctx) {
   setVolUi();
 
   /* ══ AMBIENT LIGHT ═══════════════════════════════════
-     Downscaled video frames are painted into two tiny canvases sitting
-     behind the player; CSS blurs them into a wash of colour that bleeds
-     out past the frame. We only ever draw — never read pixels back — so
-     a cross-origin stream tainting the canvas costs us nothing. */
-  const AMB = {
-    off:  null,
-    soft: { opacity: 0.5,  blur: 54, sat: 1.8, fps: 8  },
-    full: { opacity: 1,    blur: 78, sat: 2.5, fps: 12 },
-    neon: { opacity: 1.35, blur: 96, sat: 3.6, fps: 15 },
-  };
+     Driven by the standalone module in /ambient-light.js — the same file
+     you can drop into any other site. Everything here is just wiring it to
+     this player's own chrome. */
   const AMB_ORDER = ['off', 'soft', 'full', 'neon'];
-
-  const stage = ensureStage();
-  const amb = {
-    mode: AMB[getSettings().ambient] !== undefined ? getSettings().ambient : 'full',
-    flood: getSettings().ambientFlood !== false,
-    raf: null, last: 0, broken: false,
-    canvases: [...$$('.pl-amb', wrap), $('canvas', stage)],
-  };
-  amb.ctxs = amb.canvases.map((c) => c.getContext('2d', { alpha: false }));
+  const AmbientLight = globalThis.AmbientLight;
+  const amb = AmbientLight
+    ? new AmbientLight(video, {
+        target: wrap,
+        mode: AMB_ORDER.includes(getSettings().ambient) ? getSettings().ambient : 'full',
+        flood: getSettings().ambientFlood !== false,
+      })
+    : null;
 
   function ambApply() {
-    const cfg = AMB[amb.mode];
-    const live = Boolean(cfg) && !amb.broken && Boolean(st.src);
-    wrap.classList.toggle('amb-on', live);
-    if (cfg) {
-      wrap.style.setProperty('--amb-opacity', cfg.opacity);
-      wrap.style.setProperty('--amb-blur', `${cfg.blur}px`);
-      wrap.style.setProperty('--amb-sat', cfg.sat);
-      /* the page layer runs dimmer and softer than the frame glow, so it
-         lights the room without washing out body copy */
-      stage.style.setProperty('--amb-page-opacity', (cfg.opacity * 0.34).toFixed(2));
-      stage.style.setProperty('--amb-page-blur', `${Math.round(cfg.blur * 1.2)}px`);
-      stage.style.setProperty('--amb-sat', cfg.sat);
-    }
-    const flooding = live && amb.flood;
-    stage.classList.toggle('is-on', flooding);
-    document.body.classList.toggle('is-flooded', flooding);
-    $('[data-act="amb"]', root)?.classList.toggle('is-on', live);
-    live && !video.paused ? ambStart() : ambStop();
-    if (live) ambPaint();          // one frame now, so a paused video still glows
+    if (!amb) return;
+    amb.apply();
+    $('[data-act="amb"]', root)?.classList.toggle('is-on', amb.mode !== 'off');
   }
-
-  function ambPaint() {
-    if (amb.broken || video.readyState < 2) return;
-    try {
-      for (let i = 0; i < amb.canvases.length; i++) {
-        const c = amb.canvases[i];
-        amb.ctxs[i].drawImage(video, 0, 0, c.width, c.height);
-      }
-    } catch {
-      /* some decoders refuse drawImage entirely — fail quiet, not loud */
-      amb.broken = true;
-      wrap.classList.remove('amb-on');
-      ambStop();
-    }
-  }
-
-  function ambTick(t) {
-    amb.raf = requestAnimationFrame(ambTick);
-    const cfg = AMB[amb.mode];
-    if (!cfg) return;
-    if (t - amb.last < 1000 / cfg.fps) return;
-    amb.last = t;
-    ambPaint();
-  }
-  function ambStart() { if (!amb.raf) amb.raf = requestAnimationFrame(ambTick); }
-  function ambStop()  { if (amb.raf) { cancelAnimationFrame(amb.raf); amb.raf = null; } }
-
   function ambSet(mode) {
-    amb.mode = AMB[mode] !== undefined ? mode : 'full';
-    setSetting('ambient', amb.mode);
+    if (!amb) return;
+    amb.setMode(mode);
+    setSetting('ambient', mode);
     ambApply();
-    toast(amb.mode === 'off' ? 'Ambient light off' : `Ambient light: ${amb.mode}`, 'info', 1600);
+    toast(mode === 'off' ? 'Ambient light off' : `Ambient light: ${mode}`, 'info', 1600);
   }
   function ambCycle() {
+    if (!amb) return;
     ambSet(AMB_ORDER[(AMB_ORDER.indexOf(amb.mode) + 1) % AMB_ORDER.length]);
   }
   function ambFlood(on) {
-    amb.flood = on;
+    if (!amb) return;
+    amb.setFlood(on);
     setSetting('ambientFlood', on);
     ambApply();
     toast(on ? 'Ambient light floods the page' : 'Ambient light kept to the player', 'info', 1800);
@@ -172,11 +106,9 @@ export function createPlayer(mount, ctx) {
       poster.hidden = false;
       poster.querySelector('[data-pmsg]').innerHTML = noSourceMsg();
       spin.hidden = true;
-      ambApply();
       return;
     }
     st.src = source.src; st.type = source.type; st.intro = source.intro || null;
-    amb.broken = false;
     poster.hidden = true; spin.hidden = false;
     ambApply();
     renderMarks();
@@ -302,10 +234,8 @@ export function createPlayer(mount, ctx) {
     tDur.textContent = fmtTime(video.duration);
     renderMarks();
   });
-  video.addEventListener('play',    () => { btnPlay.innerHTML = svg(ICON.pause); poster.hidden = true; ambApply(); });
-  video.addEventListener('pause',   () => { btnPlay.innerHTML = svg(ICON.play); persist(); ambStop(); ambPaint(); });
-  video.addEventListener('loadeddata', ambApply);
-  video.addEventListener('seeked', ambPaint);
+  video.addEventListener('play',    () => { btnPlay.innerHTML = svg(ICON.pause); poster.hidden = true; });
+  video.addEventListener('pause',   () => { btnPlay.innerHTML = svg(ICON.play); persist(); });
   video.addEventListener('waiting', () => { spin.hidden = false; });
   video.addEventListener('playing', () => { spin.hidden = true; });
   video.addEventListener('error',   () => { if (st.src && !st.hls) fail('The browser rejected this source.'); });
@@ -465,9 +395,9 @@ export function createPlayer(mount, ctx) {
       </div>` : ''}
       <div class="pl-menu__group">
         <div class="pl-menu__label">Ambient light</div>
-        ${AMB_ORDER.map((m) => `<button class="pl-menu__item ${amb.mode === m ? 'is-on' : ''}" data-amb="${m}">
+        ${AMB_ORDER.map((m) => `<button class="pl-menu__item ${amb?.mode === m ? 'is-on' : ''}" data-amb="${m}">
           ${m === 'off' ? 'Off' : m[0].toUpperCase() + m.slice(1)}<span class="tick">${svg(ICON.check)}</span></button>`).join('')}
-        <button class="pl-menu__item ${amb.flood ? 'is-on' : ''}" data-ambflood="1">
+        <button class="pl-menu__item ${amb?.flood ? 'is-on' : ''}" data-ambflood="1">
           Flood whole page<span class="tick">${svg(ICON.check)}</span></button>
       </div>
       <div class="pl-menu__group">
@@ -483,7 +413,7 @@ export function createPlayer(mount, ctx) {
       const f = e.target.closest('[data-flag]');
       const am = e.target.closest('[data-amb]');
       if (am) { ambSet(am.dataset.amb); openMenu(); }
-      if (e.target.closest('[data-ambflood]')) { ambFlood(!amb.flood); openMenu(); }
+      if (e.target.closest('[data-ambflood]')) { ambFlood(!amb?.flood); openMenu(); }
       if (r) { video.playbackRate = Number(r.dataset.rate); openMenu(); }
       if (l && st.hls) { st.hls.currentLevel = Number(l.dataset.level); openMenu(); }
       if (f) { setSetting(f.dataset.flag, !getSettings()[f.dataset.flag]); openMenu(); }
@@ -521,7 +451,7 @@ export function createPlayer(mount, ctx) {
       ArrowDown: () => { video.volume = clamp(video.volume - 0.1, 0, 1); },
       m: () => { video.muted = !video.muted; },
       f: () => toggleFull(), i: () => togglePip(),
-      a: () => (e.shiftKey ? ambFlood(!amb.flood) : ambCycle()),
+      a: () => (e.shiftKey ? ambFlood(!amb?.flood) : ambCycle()),
       n: () => ctx.nextEp && ctx.onNext?.(ctx.nextEp),
       p: () => ctx.prevEp && ctx.onPrev?.(ctx.prevEp),
       ',': () => { video.playbackRate = RATES[clamp(RATES.indexOf(video.playbackRate) - 1, 0, RATES.length - 1)]; },
@@ -544,8 +474,7 @@ export function createPlayer(mount, ctx) {
     destroy() {
       st.destroyed = true;
       persist();
-      ambStop();
-      teardownStage();
+      amb?.destroy();
       clearTimeout(st.idleTimer); clearTimeout(st.saveTimer); clearInterval(nextTimer);
       window.removeEventListener('keydown', onKey);
       teardownHls();

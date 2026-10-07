@@ -3,9 +3,10 @@
 /* ── Buttons ──────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
-  padding: .62rem 1.1rem;
-  font-size: .68rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase;
-  border: var(--hair) solid var(--line-2); background: transparent; color: var(--fg);
+  padding: .62rem 1.1rem; border-radius: var(--r-pill);
+  font-size: .68rem; font-weight: var(--lbl-weight); letter-spacing: var(--lbl-tracking);
+  text-transform: var(--lbl-transform);
+  border: var(--bd) solid var(--line-2); background: transparent; color: var(--fg);
   white-space: nowrap; cursor: pointer;
   transition: background var(--fast), color var(--fast), border-color var(--fast), transform var(--fast);
 }
@@ -27,9 +28,10 @@
 /* ── Chips ───────────────────────────────────────────── */
 .chip {
   display: inline-flex; align-items: center; gap: .3rem;
-  padding: .2rem .5rem;
-  font-size: .6rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
-  border: var(--hair) solid var(--line); color: var(--fg-2); background: transparent;
+  padding: .2rem .5rem; border-radius: var(--r-pill);
+  font-size: .6rem; font-weight: var(--lbl-weight); letter-spacing: .13em;
+  text-transform: var(--lbl-transform);
+  border: var(--bd) solid var(--line); color: var(--fg-2); background: transparent;
   white-space: nowrap;
 }
 .chip svg { width: 11px; height: 11px; }
@@ -100,23 +102,27 @@
 .card__art {
   position: relative; aspect-ratio: 2 / 3;
   background: var(--bg-3); overflow: hidden;
-  border: var(--hair) solid var(--line);
-  transition: transform var(--mid) var(--ease), border-color var(--fast);
+  border: var(--bd) solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  transition: transform var(--mid) var(--ease), border-color var(--fast), box-shadow var(--mid);
 }
 .card__art::after {           /* the offset slab */
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: var(--accent);
+  background: var(--accent); border-radius: var(--r-lg); opacity: var(--card-slab-op);
   transition: transform var(--mid) var(--ease);
 }
 .card__art img {
   width: 100%; height: 100%; object-fit: cover;
   transition: filter var(--mid), transform var(--mid) var(--ease);
 }
-.card:hover .card__art { transform: translate(-5px, -5px); border-color: var(--fg); }
-.card:hover .card__art::after { transform: translate(10px, 10px); }
-.card:hover .card__art img { filter: grayscale(1) contrast(1.25) brightness(.55); }
-.card:focus-visible .card__art { transform: translate(-5px, -5px); }
-.card:focus-visible .card__art::after { transform: translate(10px, 10px); }
+.card:hover .card__art {
+  transform: translate(var(--card-lift), var(--card-lift));
+  border-color: var(--fg); box-shadow: var(--shadow-hi);
+}
+.card:hover .card__art::after { transform: translate(var(--card-slab), var(--card-slab)); }
+.card:hover .card__art img { filter: var(--card-img); transform: scale(var(--card-scale)); }
+.card:focus-visible .card__art { transform: translate(var(--card-lift), var(--card-lift)); }
+.card:focus-visible .card__art::after { transform: translate(var(--card-slab), var(--card-slab)); }
 
 .card__scrim {
   position: absolute; inset: 0; z-index: 2;
@@ -153,7 +159,7 @@
 /* giant outlined index numeral */
 .card__rank {
   position: absolute; left: -4px; bottom: -4px; z-index: 3;
-  font-family: var(--display); font-size: 3.4rem; line-height: .75;
+  font-family: var(--head-font); font-size: 3.4rem; line-height: .75;
   color: transparent; -webkit-text-stroke: 1.5px var(--paper);
   pointer-events: none; font-variant-numeric: tabular-nums;
   mix-blend-mode: difference;
@@ -180,17 +186,22 @@
 .ecard { position: relative; display: block; }
 .ecard__art {
   position: relative; aspect-ratio: 16 / 9; overflow: hidden;
-  background: var(--bg-3); border: var(--hair) solid var(--line);
-  transition: transform var(--mid) var(--ease), border-color var(--fast);
+  background: var(--bg-3); border: var(--bd) solid var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow);
+  transition: transform var(--mid) var(--ease), border-color var(--fast), box-shadow var(--mid);
 }
 .ecard__art::after {
   content: ""; position: absolute; inset: 0; z-index: -1; background: var(--accent);
+  border-radius: var(--r-lg); opacity: var(--card-slab-op);
   transition: transform var(--mid) var(--ease);
 }
-.ecard__art img { width: 100%; height: 100%; object-fit: cover; transition: filter var(--mid); }
-.ecard:hover .ecard__art { transform: translate(-5px, -5px); border-color: var(--fg); }
-.ecard:hover .ecard__art::after { transform: translate(10px, 10px); }
-.ecard:hover .ecard__art img { filter: grayscale(1) contrast(1.2) brightness(.6); }
+.ecard__art img { width: 100%; height: 100%; object-fit: cover; transition: filter var(--mid), transform var(--mid); }
+.ecard:hover .ecard__art {
+  transform: translate(var(--card-lift), var(--card-lift));
+  border-color: var(--fg); box-shadow: var(--shadow-hi);
+}
+.ecard:hover .ecard__art::after { transform: translate(var(--card-slab), var(--card-slab)); }
+.ecard:hover .ecard__art img { filter: var(--card-img); transform: scale(var(--card-scale)); }
 .ecard__pill {
   position: absolute; bottom: .4rem; right: .4rem; z-index: 2;
   font-size: .58rem; font-weight: 700; letter-spacing: .12em;
@@ -233,7 +244,7 @@
 
 /* ── Tabs ────────────────────────────────────────────── */
 .tabs {
-  display: flex; border: var(--hair) solid var(--line);
+  display: flex; border: var(--bd) solid var(--line); border-radius: var(--r-pill); overflow: hidden;
   width: max-content; max-width: 100%; overflow-x: auto; scrollbar-width: none;
 }
 .tabs::-webkit-scrollbar { display: none; }
@@ -255,8 +266,8 @@
   text-transform: uppercase; color: var(--fg-3);
 }
 .input, .select {
-  height: 36px; padding: 0 .65rem;
-  background: var(--bg-2); border: var(--hair) solid var(--line);
+  height: 36px; padding: 0 .65rem; border-radius: var(--r);
+  background: var(--bg-2); border: var(--bd) solid var(--line);
   color: var(--fg); font-size: .74rem; font-weight: 600; letter-spacing: .06em;
   width: 100%; min-width: 0;
   transition: border-color var(--fast), background var(--fast);
@@ -295,6 +306,7 @@
 }
 .toast {
   pointer-events: auto; display: flex; align-items: center; gap: .6rem;
+  border-radius: var(--r); box-shadow: var(--shadow-hi);
   padding: .65rem .8rem; background: var(--fg); color: var(--bg);
   font-size: .7rem; font-weight: 600; letter-spacing: .04em;
   animation: toastIn .2s var(--ease);
@@ -314,8 +326,8 @@
 .modal__scrim { position: absolute; inset: 0; background: rgba(0,0,0,.78); animation: fade .18s; }
 .modal__card {
   position: relative; z-index: 1; width: min(560px, 100%);
-  max-height: 86vh; overflow-y: auto;
-  background: var(--bg); border: var(--hair) solid var(--line-2);
+  max-height: 86vh; overflow-y: auto; border-radius: var(--r-lg); box-shadow: var(--shadow-hi);
+  background: var(--bg); border: var(--bd) solid var(--line-2);
   padding: 1.2rem; animation: modalIn .2s var(--ease);
 }
 @keyframes modalIn { from { opacity: 0; transform: translateY(10px); } }
@@ -370,3 +382,32 @@
 .notice b { color: var(--fg); font-weight: 700; letter-spacing: .06em; }
 .notice--info { border-left-color: var(--cyan); }
 .notice--info svg { color: var(--cyan); }
+
+/* ── Skin picker ─────────────────────────────────────── */
+.skin-grid { display: grid; gap: .6rem; }
+.skin-card {
+  display: grid; grid-template-columns: 76px 1fr; gap: .9rem; align-items: center;
+  width: 100%; text-align: left; padding: .7rem;
+  border: var(--bd) solid var(--line); border-radius: var(--r-lg);
+  transition: border-color var(--fast), background var(--fast), transform var(--fast);
+}
+.skin-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.skin-card.is-on { border-color: var(--accent); }
+.skin-card__swatch {
+  position: relative; height: 56px; overflow: hidden;
+  display: grid; place-items: center; border: 1px solid rgba(128,128,128,.28);
+}
+.skin-card__swatch b { font-size: 1.45rem; line-height: 1; }
+.skin-card__swatch i {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 7px;
+  display: flex;
+}
+.skin-card__swatch i span { flex: 1; }
+.skin-card__text { min-width: 0; }
+.skin-card__text b { display: block; font-size: .92rem; font-weight: 700; letter-spacing: -.01em; }
+.skin-card__text small { color: var(--fg-3); font-size: .74rem; line-height: 1.45; display: block; margin-top: .15rem; }
+.skin-card__tag {
+  display: inline-block; margin-top: .35rem;
+  font-size: .56rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent);
+}

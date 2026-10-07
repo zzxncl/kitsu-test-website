@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ambient-light.js</title>
+<meta name="description" content="A drop-in ambilight for any HTML video element. One file, no dependencies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b0b0e; --fg:#f0f0f4; --fg2:#9a9aa8; --fg3:#6a6a78; --line:rgba(240,240,244,.14); --accent:#ff3b18; --acid:#ccff00; }
+  * { box-sizing:border-box; margin:0; }
+  html { background:var(--bg); }
+  body { background:transparent; color:var(--fg); font-family:"Space Grotesk",system-ui,sans-serif; line-height:1.6; padding:0 0 5rem; }
+  .wrap { max-width:960px; margin-inline:auto; padding-inline:clamp(16px,4vw,32px); }
+  header { padding:clamp(2.5rem,7vw,5rem) 0 2rem; }
+  h1 { font-size:clamp(2rem,6vw,3.6rem); letter-spacing:-.03em; line-height:1.02; font-weight:700; }
+  h1 em { font-style:normal; color:var(--accent); }
+  .sub { color:var(--fg2); font-size:1.02rem; max-width:56ch; margin-top:.9rem; }
+  .tag { display:inline-flex; gap:.4rem; align-items:center; font-family:"Space Mono",monospace; font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--acid); border:1px solid var(--line); padding:.3rem .6rem; border-radius:99px; margin-bottom:1rem; }
+  h2 { font-size:1.2rem; margin:2.6rem 0 .8rem; letter-spacing:-.01em; }
+  p { color:var(--fg2); }
+  a { color:var(--acid); }
+  code { font-family:"Space Mono",monospace; font-size:.86em; background:rgba(255,255,255,.07); padding:.1em .38em; border-radius:4px; }
+  pre { background:#141419; border:1px solid var(--line); border-radius:10px; padding:1rem; overflow-x:auto; margin-top:.7rem; }
+  pre code { background:none; padding:0; font-size:.82rem; line-height:1.7; color:#e4e4ec; }
+  .k { color:#ff8da3; } .s { color:#b9f18d; } .c { color:#6a6a78; font-style:italic; }
+  /* the stage */
+  .stage { position:relative; margin:2rem 0 1rem; }
+  video { width:100%; display:block; border-radius:10px; background:#000; }
+  .controls { display:flex; gap:.4rem; flex-wrap:wrap; align-items:center; margin-top:1.1rem; }
+  button { font:inherit; cursor:pointer; background:transparent; color:var(--fg); border:1px solid var(--line);
+           border-radius:99px; padding:.45rem .9rem; font-size:.78rem; font-weight:600; transition:.14s; }
+  button:hover { border-color:var(--fg); }
+  button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .lbl { font-family:"Space Mono",monospace; font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; color:var(--fg3); margin-right:.3rem; }
+  table { width:100%; border-collapse:collapse; margin-top:.8rem; font-size:.86rem; }
+  th,td { text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--fg3); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; font-weight:700; }
+  td code { white-space:nowrap; }
+  footer { margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--line); color:var(--fg3); font-size:.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag">One file · no dependencies · MIT</span>
+    <h1>ambient<em>-</em>light.js</h1>
+    <p class="sub">Drop-in ambilight for any <code>&lt;video&gt;</code>. It samples frames, blurs them behind the
+      player, and optionally lights the whole page. Hit play — then grab the file.</p>
+  </header>
+
+  <div class="stage">
+    <video id="v" src="video/demo.webm" muted loop playsinline controls></video>
+  </div>
+
+  <div class="controls">
+    <span class="lbl">Mode</span>
+    <button data-mode="off">Off</button>
+    <button data-mode="soft">Soft</button>
+    <button data-mode="full" class="on">Full</button>
+    <button data-mode="neon">Neon</button>
+    <span class="lbl" style="margin-left:.8rem">Page</span>
+    <button id="floodBtn" class="on">Flood the page</button>
+  </div>
+
+  <h2>Use it</h2>
+  <pre><code><span class="c">&lt;!-- 1. the file --&gt;</span>
+&lt;<span class="k">script</span> <span class="k">src</span>=<span class="s">"ambient-light.js"</span>&gt;&lt;/<span class="k">script</span>&gt;
+
+<span class="c">&lt;!-- 2. one line --&gt;</span>
+&lt;<span class="k">script</span>&gt;
+  <span class="k">const</span> amb = AmbientLight.attach(<span class="s">'video'</span>);
+&lt;/<span class="k">script</span>&gt;</code></pre>
+
+  <p style="margin-top:.9rem">That's the whole integration. It injects its own CSS, wraps the video itself, and
+    starts and stops with playback.</p>
+
+  <h2>Options</h2>
+  <pre><code><span class="k">new</span> AmbientLight(video, {
+  mode:          <span class="s">'full'</span>,   <span class="c">// 'off' | 'soft' | 'full' | 'neon' | {custom}</span>
+  flood:         <span class="k">true</span>,     <span class="c">// also light the page behind the document</span>
+  floodStrategy: <span class="s">'auto'</span>,   <span class="c">// 'behind' | 'overlay' | 'auto'</span>
+  target:        <span class="k">null</span>,     <span class="c">// container to glow around (default: wraps the video)</span>
+  fps:           <span class="k">null</span>,     <span class="c">// override the preset's repaint rate</span>
+});</code></pre>
+
+  <table>
+    <tr><th>Call</th><th>Does</th></tr>
+    <tr><td><code>amb.setMode('neon')</code></td><td>Switch intensity preset.</td></tr>
+    <tr><td><code>amb.cycle()</code></td><td>Step through off → soft → full → neon.</td></tr>
+    <tr><td><code>amb.setFlood(false)</code></td><td>Keep the glow to the frame only.</td></tr>
+    <tr><td><code>amb.toggle()</code></td><td>Off ↔ full.</td></tr>
+    <tr><td><code>amb.destroy()</code></td><td>Remove everything and restore the DOM.</td></tr>
+  </table>
+
+  <h2>Things worth knowing</h2>
+  <p><b>Cross-origin video is fine.</b> It only ever <i>draws</i> frames and never reads pixels back, so a
+    tainted canvas costs nothing. No CORS headers, no <code>crossorigin</code> attribute needed.</p>
+  <p style="margin-top:.7rem"><b>The page flood needs somewhere to live.</b> A layer at <code>z-index:-1</code> is
+    invisible if <code>&lt;body&gt;</code> paints an opaque background over it. On <code>auto</code> it detects that
+    and moves the colour up to <code>&lt;html&gt;</code> — the page looks identical and the glow has room. If it
+    can't do that safely it falls back to an <code>overlay</code> layer using <code>mix-blend-mode: screen</code>,
+    which works anywhere.</p>
+  <p style="margin-top:.7rem"><b>It's cheap.</b> Frames go into 40×23 canvases at 8–15fps, and the browser's own
+    upscaling does the smoothing. It stops entirely while paused.</p>
+  <p style="margin-top:.7rem"><b>Watch your contrast.</b> With <code>flood</code> on, text sitting directly on the
+    page background can wash out in bright scenes. Give that text a backing
+    <code>text-shadow</code>, or make your surfaces slightly translucent so the colour reads through them.</p>
+
+  <footer>MIT. Take it, change it, ship it.</footer>
+</div>
+
+<script src="ambient-light.js"></script>
+<script>
+  const v = document.getElementById('v');
+  const amb = AmbientLight.attach(v, { mode: 'full', flood: true });
+  document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+    amb.setMode(b.dataset.mode);
+    document.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+  const fb = document.getElementById('floodBtn');
+  fb.addEventListener('click', () => {
+    amb.setFlood(!amb.flood);
+    fb.classList.toggle('on', amb.flood);
+    fb.textContent = amb.flood ? 'Flood the page' : 'Frame only';
+  });
+  v.play().catch(() => {});
+</script>
+</body>
+</html>

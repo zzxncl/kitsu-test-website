@@ -36,6 +36,33 @@
   --display: "Anton", "Arial Narrow", Impact, sans-serif;
   --sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --mono: "Space Grotesk", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── skin surface: every skin is mostly just these ──────────────── */
+  --r: 0px;              /* corner radius, controls + small surfaces */
+  --r-lg: 0px;           /* corner radius, cards + panels            */
+  --r-pill: 0px;         /* fully-rounded things                     */
+  --bd: 1px;             /* border width                             */
+  --shadow: none;        /* resting surface shadow                   */
+  --shadow-hi: none;     /* hover shadow                             */
+  --panel-bg: var(--bg); /* panel fill (may be translucent)          */
+  --panel-blur: 0px;     /* backdrop blur behind panels              */
+  --topbar-bg: var(--bg);
+
+  --head-font: var(--display);
+  --head-transform: uppercase;
+  --head-tracking: .005em;
+  --head-weight: 400;
+  --head-lh: .94;
+
+  --lbl-transform: uppercase;
+  --lbl-tracking: .15em;
+  --lbl-weight: 700;
+
+  --card-lift: -5px;     /* hover translate                          */
+  --card-slab: 10px;     /* how far the accent slab slides out       */
+  --card-slab-op: 1;     /* slab visibility (0 disables the effect)  */
+  --card-scale: 1;       /* hover image scale                        */
+  --card-img: grayscale(1) contrast(1.25) brightness(.55);
 }
 
 :root[data-theme="paper"] {
@@ -90,11 +117,11 @@ ul, ol { list-style: none; padding: 0; }
 
 /* ── type ─────────────────────────────────────────────── */
 h1, h2, h3, h4 {
-  font-family: var(--display);
-  font-weight: 400;
-  line-height: .94;
-  letter-spacing: .005em;
-  text-transform: uppercase;
+  font-family: var(--head-font);
+  font-weight: var(--head-weight);
+  line-height: var(--head-lh);
+  letter-spacing: var(--head-tracking);
+  text-transform: var(--head-transform);
   text-wrap: balance;
 }
 h1 { font-size: clamp(2.4rem, 7vw, 6rem); }
@@ -105,8 +132,8 @@ p { text-wrap: pretty; }
 /* small-caps metadata label — the workhorse of this design */
 .lbl, .kicker {
   font-family: var(--sans);
-  font-size: .66rem; font-weight: 700;
-  letter-spacing: .18em; text-transform: uppercase;
+  font-size: .66rem; font-weight: var(--lbl-weight);
+  letter-spacing: var(--lbl-tracking); text-transform: var(--lbl-transform);
   color: var(--fg-3);
 }
 .num {

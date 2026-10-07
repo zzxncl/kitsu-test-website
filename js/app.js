@@ -5,6 +5,7 @@ import { getSettings, setSetting, pushHistory, getHistory, onStoreChange } from 
 import { api, onApiState } from './api.js';
 import { route, startRouter, go, parseHash, buildQuery } from './router.js';
 import { ICON, svg, displayTitle } from './components.js';
+import { SKINS, SKIN_IDS, getSkin, SKIN_DEFAULT_THEME } from './skins.js';
 import { toast } from './toast.js';
 
 /* ── routes ───────────────────────────────────────────── */
@@ -31,7 +32,57 @@ function applyTheme() {
 }
 applyTheme();
 prefersDark.addEventListener('change', () => { if (getSettings().theme === 'system') applyTheme(); });
-document.addEventListener('theme:apply', applyTheme);
+document.addEventListener('theme:apply', () => { applyTheme(); applySkin(); });
+
+/* ── skins ────────────────────────────────────────────── */
+function applySkin() {
+  const id = SKIN_IDS.includes(getSettings().skin) ? getSettings().skin : 'press';
+  document.documentElement.dataset.skin = id;
+}
+applySkin();
+
+const skinModal = $('#skinModal');
+function renderSkins() {
+  const cur = document.documentElement.dataset.skin;
+  $('#skinGrid').innerHTML = SKINS.map((s) => `
+    <button class="skin-card ${s.id === cur ? 'is-on' : ''}" data-skin="${attr(s.id)}">
+      <span class="skin-card__swatch" style="background:${attr(s.bg)};color:${attr(s.fg)};border-radius:${attr(s.radius)}">
+        <b style="font-family:'${attr(s.face)}',sans-serif">Aa</b>
+        <i><span style="background:${attr(s.accent)}"></span><span style="background:${attr(s.alt)}"></span></i>
+      </span>
+      <span class="skin-card__text">
+        <b>${esc(s.name)}</b>
+        <small>${esc(s.blurb)}</small>
+        ${s.id === cur ? '<span class="skin-card__tag">Current</span>' : ''}
+      </span>
+    </button>`).join('');
+}
+function setSkinModal(open) {
+  if (open) renderSkins();
+  skinModal.hidden = !open;
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+$('#skinBtn')?.addEventListener('click', () => setSkinModal(skinModal.hidden));
+skinModal.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close-skin]')) { setSkinModal(false); return; }
+  const card = e.target.closest('[data-skin]');
+  if (!card) return;
+  const id = card.dataset.skin;
+  setSetting('skin', id);
+  /* each skin has a natural default theme — honour it on first switch */
+  setSetting('theme', SKIN_DEFAULT_THEME[id] || 'ink');
+  applySkin(); applyTheme(); renderSkins();
+  toast(`Skin: ${getSkin(id).name}`, 'ok', 1600);
+});
+function cycleSkin() {
+  const cur = document.documentElement.dataset.skin;
+  const next = SKIN_IDS[(SKIN_IDS.indexOf(cur) + 1) % SKIN_IDS.length];
+  setSetting('skin', next);
+  setSetting('theme', SKIN_DEFAULT_THEME[next] || 'ink');
+  applySkin(); applyTheme();
+  if (!skinModal.hidden) renderSkins();
+  toast(`Skin: ${getSkin(next).name}`, 'ok', 1500);
+}
 
 $('#themeBtn').addEventListener('click', () => {
   const next = document.documentElement.dataset.theme === 'ink' ? 'paper' : 'ink';
@@ -199,7 +250,7 @@ window.addEventListener('keydown', (e) => {
   const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   const onWatch = parseHash().path.startsWith('/watch');
 
-  if (e.key === 'Escape') { closeSuggest(); setModal(false); setDrawer(false); return; }
+  if (e.key === 'Escape') { closeSuggest(); setModal(false); setDrawer(false); setSkinModal(false); return; }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
 
   if (e.key === '/') { e.preventDefault(); input.focus(); input.select(); return; }
@@ -221,10 +272,12 @@ window.addEventListener('keydown', (e) => {
   if (onWatch) return;
   if (e.key.toLowerCase() === 'r') { e.preventDefault(); surprise(); }
   if (e.key.toLowerCase() === 't') { e.preventDefault(); $('#themeBtn').click(); }
+  if (e.key.toLowerCase() === 's') { e.preventDefault(); cycleSkin(); }
+  if (e.key.toLowerCase() === 'k') { e.preventDefault(); setSkinModal(skinModal.hidden); }
 });
 
 /* ── re-render cards when the library changes elsewhere ── */
-onStoreChange((what) => { if (what === 'settings') applyTheme(); });
+onStoreChange((what) => { if (what === 'settings') { applyTheme(); applySkin(); } });
 
 /* ── go ───────────────────────────────────────────────── */
 startRouter();
