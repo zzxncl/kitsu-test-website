@@ -205,3 +205,36 @@ export function wipeAll() {
   settings = { ...CONFIG.defaults }; list = {}; progress = {}; history = [];
   emit('all');
 }
+
+/* ── comments (local only — there is no backend) ──────── */
+const K_COMMENTS = STORAGE_PREFIX + 'comments';
+let comments = read(K_COMMENTS, {});
+
+export const getComments = (key) => (comments[key] || []).slice();
+export function addComment(key, { body, parent = null, author = 'you' }) {
+  body = String(body || '').trim();
+  if (!body) return null;
+  const c = {
+    id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    body, parent, author, at: Date.now(), up: 0, down: 0, vote: 0,
+  };
+  comments = { ...comments, [key]: [...(comments[key] || []), c] };
+  write(K_COMMENTS, comments); emit('comments');
+  return c;
+}
+export function voteComment(key, id, dir) {
+  const list = (comments[key] || []).map((c) => {
+    if (c.id !== id) return c;
+    const prev = c.vote || 0;
+    const next = prev === dir ? 0 : dir;         // clicking again clears the vote
+    return { ...c, vote: next, up: Math.max(0, (c.up || 0) + (next === 1 ? 1 : 0) - (prev === 1 ? 1 : 0)),
+             down: Math.max(0, (c.down || 0) + (next === -1 ? 1 : 0) - (prev === -1 ? 1 : 0)) };
+  });
+  comments = { ...comments, [key]: list };
+  write(K_COMMENTS, comments); emit('comments');
+}
+export function removeComment(key, id) {
+  const list = (comments[key] || []).filter((c) => c.id !== id && c.parent !== id);
+  comments = { ...comments, [key]: list };
+  write(K_COMMENTS, comments); emit('comments');
+}

@@ -1,56 +1,5 @@
 /* KITSU/LIVE — watch page + player + ambient light */
 
-.watch {
-  max-width: var(--rail); margin-inline: auto;
-  padding: 0 var(--pad);
-  display: grid; gap: 1.1rem;
-  grid-template-columns: minmax(0, 1fr) clamp(260px, 24vw, 350px);
-  align-items: start;
-}
-.watch__main { display: grid; gap: .8rem; min-width: 0; }
-.watch__side { display: grid; gap: .8rem; position: sticky; top: calc(var(--nav-h) + .7rem); }
-@media (max-width: 1080px) {
-  .watch { grid-template-columns: 1fr; }
-  .watch__side { position: static; }
-}
-
-.watch__crumbs {
-  display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
-  padding: .8rem 0;
-  font-size: .6rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-  color: var(--fg-3);
-}
-.watch__crumbs a:hover { color: var(--accent); }
-.watch__crumbs svg { width: 11px; height: 11px; }
-
-.watch__titlebar {
-  display: flex; gap: .8rem; align-items: flex-start; flex-wrap: wrap;
-  padding-bottom: .7rem; border-bottom: var(--hair) solid var(--line-2);
-}
-.watch__titlebar h1 { font-size: clamp(1.3rem, 3vw, 2.4rem); }
-.watch__titlebar p {
-  color: var(--fg-3); font-size: .62rem; font-weight: 700;
-  letter-spacing: .14em; text-transform: uppercase; margin-top: .3rem;
-}
-.watch__titleacts { margin-left: auto; display: flex; gap: .35rem; flex-wrap: wrap; }
-
-.srvbar {
-  display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
-  padding: .6rem .7rem; border: var(--bd) solid var(--line);
-  background: var(--bg-2); border-radius: var(--r-lg);
-}
-.srvbar__label { font-size: .58rem; font-weight: 700; letter-spacing: .18em; color: var(--fg-3); }
-.srvbar__group { display: flex; }
-.srvbtn {
-  padding: .3rem .7rem; border-radius: var(--r);
-  font-size: .62rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--fg-3); border: var(--hair) solid var(--line); margin-right: -1px;
-  transition: all var(--fast);
-}
-.srvbtn:hover { color: var(--fg); background: var(--bg); }
-.srvbtn.is-on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); position: relative; z-index: 1; }
-.srvbar .spacer { margin-left: auto; }
-
 /* The module injects its own glow CSS. What belongs to the SITE is this:
    while the page is flooded, surfaces go translucent so the colour reads
    through the chrome instead of stopping at it. */
@@ -267,15 +216,3 @@
 .pl-next__t small { color: #9c998f; font-size: .62rem; }
 .pl-next__acts { display: flex; gap: .3rem; }
 .pl-next__acts .btn { flex: 1; }
-
-/* episode sidebar */
-.epnav { display: flex; gap: .4rem; align-items: center; margin-bottom: .6rem; }
-.epnav .input { height: 32px; font-size: .7rem; }
-.eplist--side { max-height: min(60vh, 600px); overflow-y: auto; display: grid; }
-.eprow--side { display: grid; grid-template-columns: 2rem 1fr; gap: .55rem; align-items: center; }
-.eprow--side.is-active { background: var(--accent); color: var(--on-accent); }
-.eprow--side.is-active .eprow__n, .eprow--side.is-active .eprow__sub { color: var(--on-accent); opacity: .85; }
-.eprow--side.is-active:hover .eprow__t { color: var(--on-accent); }
-.eprow__wrap { min-width: 0; }
-.eprow__sub { font-size: .58rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-3); display: flex; gap: .35rem; }
-.eprow__bar { margin-top: .25rem; }

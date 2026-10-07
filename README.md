@@ -3,12 +3,13 @@
 An anime index with an ambient-light player. Browse, search, track what you're
 watching — all in the browser, with no build step, no framework, no account.
 
-**Five different sites**, switchable live — press <kbd>D</kbd> for the picker
-or <kbd>X</kbd> to cycle. Not five colour schemes: different navigation,
+**Six different sites**, switchable live — press <kbd>D</kbd> for the picker
+or <kbd>X</kbd> to cycle. Not six colour schemes: different navigation,
 different home page architecture, different density.
 
 | Design | What it is |
 |---|---|
+| **Hub** | The default. Slim top bar with a command-style search, one wide 16:9 spotlight you page through, a genre rail, and dense poster grids. Violet accents, metadata badges everywhere. |
 | **Press** | Top bar with numbered sections. A split hero where the headline runs over the artwork, then horizontal rails. Hairlines, no rounding. |
 | **Orbit** | App shell. A fixed icon rail down the left, a floating search bar, one wide featured banner, then uniform dense grids — no carousels. |
 | **Broadsheet** | A newspaper. Centred masthead with a dateline, multi-column briefs with small thumbs, a standings sidebar. Serif throughout; the writing leads. |

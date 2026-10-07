@@ -68,7 +68,7 @@ export const CONFIG = {
   ],
 
   defaults: {
-    layout: 'press',         // press | orbit | broadsheet | terminal | stage
+    layout: 'hub',           // hub | press | orbit | broadsheet | terminal | stage
     theme: 'ink',            // ink | paper | system
     autoplay: false,
     autoNext: true,

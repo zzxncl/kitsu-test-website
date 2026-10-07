@@ -5,13 +5,14 @@
  * catalogue card. Pages ask the active layout to render those; everything
  * else (routing, data, store, player) is shared.
  */
+import hub from './hub.js';
 import press from './press.js';
 import orbit from './orbit.js';
 import broadsheet from './broadsheet.js';
 import terminal from './terminal.js';
 import stage from './stage.js';
 
-export const LAYOUTS = [press, orbit, broadsheet, terminal, stage];
+export const LAYOUTS = [hub, press, orbit, broadsheet, terminal, stage];
 export const LAYOUT_IDS = LAYOUTS.map((l) => l.id);
 export const getLayout = (id) => LAYOUTS.find((l) => l.id === id) || LAYOUTS[0];
 

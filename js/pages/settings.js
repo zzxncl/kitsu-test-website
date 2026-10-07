@@ -26,7 +26,7 @@ export default async function settings({ mount }) {
           <div class="panel">
             <h3>Appearance</h3>
             <div class="setting-row">
-              <div class="setting-row__text"><b>Design</b><small>Five different sites. Press <kbd>D</kbd> for the picker, <kbd>X</kbd> to cycle.</small></div>
+              <div class="setting-row__text"><b>Design</b><small>Six different sites. Press <kbd>D</kbd> for the picker, <kbd>X</kbd> to cycle.</small></div>
               <select class="select" data-set="layout">
                 ${LAYOUTS.map((k) => `<option value="${k.id}" ${s.layout === k.id ? 'selected' : ''}>${k.name} — ${k.tagline}</option>`).join('')}
               </select>
