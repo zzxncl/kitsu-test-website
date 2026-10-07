@@ -1,25 +1,27 @@
-/* Kitsu Live — bootstrap: theme, nav, search, global keys, routes. */
+/* KITSU/LIVE — bootstrap.
+ * The active layout owns the chrome and the home page; this file wires the
+ * shared behaviour (routing, search, theme, keyboard) to whatever markup the
+ * layout produced, via data-attributes rather than fixed IDs. */
 import { CONFIG } from './config.js';
-import { $, $$, debounce, esc, attr, imgTag, genPoster, on } from './util.js';
+import { $, $$, debounce, esc, attr, imgTag, genPoster } from './util.js';
 import { getSettings, setSetting, pushHistory, getHistory, onStoreChange } from './store.js';
 import { api, onApiState } from './api.js';
-import { route, startRouter, go, parseHash, buildQuery } from './router.js';
+import { route, startRouter, go, parseHash, buildQuery, resolve } from './router.js';
 import { ICON, svg, displayTitle } from './components.js';
-import { SKINS, SKIN_IDS, getSkin, SKIN_DEFAULT_THEME } from './skins.js';
+import { LAYOUTS, LAYOUT_IDS, getLayout, setActive, current } from './layouts/index.js';
 import { toast } from './toast.js';
 
 /* ── routes ───────────────────────────────────────────── */
-route('/',            (c) => import('./pages/home.js').then((m) => m.default(c)));
-route('/browse',      (c) => import('./pages/browse.js').then((m) => m.default(c)));
-route('/anime/:id',   (c) => import('./pages/info.js').then((m) => m.default(c)));
-route('/watch/:id',   (c) => import('./pages/watch.js').then((m) => m.default(c)));
-route('/library',     (c) => import('./pages/library.js').then((m) => m.default(c)));
-route('/schedule',    (c) => import('./pages/schedule.js').then((m) => m.default(c)));
-route('/settings',    (c) => import('./pages/settings.js').then((m) => m.default(c)));
+route('/',          (c) => import('./pages/home.js').then((m) => m.default(c)));
+route('/browse',    (c) => import('./pages/browse.js').then((m) => m.default(c)));
+route('/anime/:id', (c) => import('./pages/info.js').then((m) => m.default(c)));
+route('/watch/:id', (c) => import('./pages/watch.js').then((m) => m.default(c)));
+route('/library',   (c) => import('./pages/library.js').then((m) => m.default(c)));
+route('/schedule',  (c) => import('./pages/schedule.js').then((m) => m.default(c)));
+route('/settings',  (c) => import('./pages/settings.js').then((m) => m.default(c)));
 
 /* ── theme ────────────────────────────────────────────── */
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-/* older saves used dark/light — fold them onto the current names */
 const THEME_ALIAS = { dark: 'ink', light: 'paper' };
 function applyTheme() {
   const raw = getSettings().theme;
@@ -28,88 +30,88 @@ function applyTheme() {
   document.documentElement.dataset.theme = resolved;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = resolved === 'ink' ? '#0b0b0c' : '#efece3';
-  document.documentElement.classList.toggle('reduce-motion', !!getSettings().reduceMotion);
 }
-applyTheme();
 prefersDark.addEventListener('change', () => { if (getSettings().theme === 'system') applyTheme(); });
-document.addEventListener('theme:apply', () => { applyTheme(); applySkin(); });
 
-/* ── skins ────────────────────────────────────────────── */
-function applySkin() {
-  const id = SKIN_IDS.includes(getSettings().skin) ? getSettings().skin : 'press';
-  document.documentElement.dataset.skin = id;
+/* ── layout ───────────────────────────────────────────── */
+function mountLayout(id, { rerender = false } = {}) {
+  const l = setActive(LAYOUT_IDS.includes(id) ? id : LAYOUT_IDS[0]);
+  document.documentElement.dataset.layout = l.id;
+  $('#shell').innerHTML = l.shell();
+  $('#shellFoot').innerHTML = l.foot ? l.foot() : '';
+  l.afterMount?.($('#shell'));
+  syncNav();
+  syncSearchBox();
+  if (rerender) resolve();
+  return l;
 }
-applySkin();
+function switchLayout(id) {
+  setSetting('layout', id);
+  const l = getLayout(id);
+  if (l.theme) setSetting('theme', l.theme);
+  applyTheme();
+  mountLayout(id, { rerender: true });
+  renderDesigns();
+  toast(`Design: ${l.name}`, 'ok', 1700);
+}
+function cycleLayout() {
+  const cur = document.documentElement.dataset.layout;
+  switchLayout(LAYOUT_IDS[(LAYOUT_IDS.indexOf(cur) + 1) % LAYOUT_IDS.length]);
+}
 
-const skinModal = $('#skinModal');
-function renderSkins() {
-  const cur = document.documentElement.dataset.skin;
-  $('#skinGrid').innerHTML = SKINS.map((s) => `
-    <button class="skin-card ${s.id === cur ? 'is-on' : ''}" data-skin="${attr(s.id)}">
-      <span class="skin-card__swatch" style="background:${attr(s.bg)};color:${attr(s.fg)};border-radius:${attr(s.radius)}">
-        <b style="font-family:'${attr(s.face)}',sans-serif">Aa</b>
-        <i><span style="background:${attr(s.accent)}"></span><span style="background:${attr(s.alt)}"></span></i>
-      </span>
-      <span class="skin-card__text">
-        <b>${esc(s.name)}</b>
-        <small>${esc(s.blurb)}</small>
-        ${s.id === cur ? '<span class="skin-card__tag">Current</span>' : ''}
+/* ── design picker ────────────────────────────────────── */
+const layoutModal = $('#layoutModal');
+function renderDesigns() {
+  const cur = document.documentElement.dataset.layout;
+  $('#designGrid').innerHTML = LAYOUTS.map((l) => `
+    <button class="design-card ${l.id === cur ? 'is-on' : ''}" data-pick-layout="${attr(l.id)}">
+      <span class="design-card__shot">${l.thumb || ''}</span>
+      <span class="design-card__text">
+        <b>${esc(l.name)}</b>
+        <em>${esc(l.tagline || '')}</em>
+        <small>${esc(l.blurb || '')}</small>
+        ${l.id === cur ? '<span class="design-card__tag">Current</span>' : ''}
       </span>
     </button>`).join('');
 }
-function setSkinModal(open) {
-  if (open) renderSkins();
-  skinModal.hidden = !open;
+function setLayoutModal(open) {
+  if (open) renderDesigns();
+  layoutModal.hidden = !open;
   document.body.style.overflow = open ? 'hidden' : '';
 }
-$('#skinBtn')?.addEventListener('click', () => setSkinModal(skinModal.hidden));
-skinModal.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close-skin]')) { setSkinModal(false); return; }
-  const card = e.target.closest('[data-skin]');
-  if (!card) return;
-  const id = card.dataset.skin;
-  setSetting('skin', id);
-  /* each skin has a natural default theme — honour it on first switch */
-  setSetting('theme', SKIN_DEFAULT_THEME[id] || 'ink');
-  applySkin(); applyTheme(); renderSkins();
-  toast(`Skin: ${getSkin(id).name}`, 'ok', 1600);
-});
-function cycleSkin() {
-  const cur = document.documentElement.dataset.skin;
-  const next = SKIN_IDS[(SKIN_IDS.indexOf(cur) + 1) % SKIN_IDS.length];
-  setSetting('skin', next);
-  setSetting('theme', SKIN_DEFAULT_THEME[next] || 'ink');
-  applySkin(); applyTheme();
-  if (!skinModal.hidden) renderSkins();
-  toast(`Skin: ${getSkin(next).name}`, 'ok', 1500);
-}
-
-$('#themeBtn').addEventListener('click', () => {
-  const next = document.documentElement.dataset.theme === 'ink' ? 'paper' : 'ink';
-  setSetting('theme', next);
-  applyTheme();
+layoutModal.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close-layout]')) return setLayoutModal(false);
+  const pick = e.target.closest('[data-pick-layout]');
+  if (pick) { switchLayout(pick.dataset.pickLayout); setLayoutModal(false); }
 });
 
-/* ── sticky topbar ────────────────────────────────────── */
-const topbar = $('#topbar');
-const onScroll = () => topbar.classList.toggle('is-stuck', window.scrollY > 8);
-window.addEventListener('scroll', onScroll, { passive: true });
-onScroll();
-
-/* ── drawer ───────────────────────────────────────────── */
-const drawer = $('#drawer');
-const navToggle = $('#navToggle');
-function setDrawer(open) {
-  drawer.hidden = !open;
-  navToggle.setAttribute('aria-expanded', String(open));
+const keysModal = $('#keysModal');
+function setKeys(open) {
+  keysModal.hidden = !open;
   document.body.style.overflow = open ? 'hidden' : '';
 }
-navToggle.addEventListener('click', () => setDrawer(drawer.hidden));
-drawer.addEventListener('click', (e) => {
-  if (e.target.closest('[data-close-drawer]') || e.target.closest('a')) setDrawer(false);
+keysModal.addEventListener('click', (e) => { if (e.target.closest('[data-close-modal]')) setKeys(false); });
+
+/* ── delegated chrome actions ─────────────────────────── */
+document.addEventListener('click', (e) => {
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (!act) return;
+  if (act === 'theme')  { setSetting('theme', document.documentElement.dataset.theme === 'ink' ? 'paper' : 'ink'); applyTheme(); }
+  if (act === 'layout') setLayoutModal(layoutModal.hidden);
+  if (act === 'keys')   setKeys(keysModal.hidden);
+  if (act === 'random') surprise();
+  if (act === 'menu')   document.documentElement.classList.toggle('nav-open');
+  if (act === 'closemenu') document.documentElement.classList.remove('nav-open');
 });
 
-/* ── nav active state ─────────────────────────────────── */
+async function surprise() {
+  toast('Rolling…', 'info', 1200);
+  const a = await api.random();
+  if (a?.id) go(`/anime/${a.id}`);
+  else toast('Could not pick one — try again.', 'bad');
+}
+
+/* ── nav state ────────────────────────────────────────── */
 function syncNav() {
   const { path } = parseHash();
   const key = path === '/' ? 'home'
@@ -119,71 +121,80 @@ function syncNav() {
     : path.startsWith('/settings') ? 'settings' : '';
   $$('[data-nav]').forEach((a) => a.classList.toggle('is-active', a.dataset.nav === key));
 }
-document.addEventListener('route:after', syncNav);
-
-/* ── demo-mode chip in the drawer ─────────────────────── */
-onApiState((s) => {
-  const chip = $('#drawerMode');
-  if (chip) chip.textContent = s.demo ? 'Demo catalog (API offline)' : 'Live catalog';
+document.addEventListener('route:after', () => {
+  syncNav(); syncSearchBox();
+  document.documentElement.classList.remove('nav-open');
 });
 
-/* ── search + typeahead ───────────────────────────────── */
-const form = $('#searchForm');
-const input = $('#searchInput');
-const list = $('#suggestList');
-let suggestions = [];
-let selIdx = -1;
+function syncSearchBox() {
+  const { path, query } = parseHash();
+  const input = $('[data-search]');
+  if (input) input.value = path.startsWith('/browse') && query.q ? query.q : '';
+}
+
+/* ── search + typeahead (delegated: survives layout swaps) ── */
+let suggestions = [], selIdx = -1;
+const suggestBox = () => $('[data-suggest]');
 
 function closeSuggest() {
-  list.hidden = true; list.innerHTML = '';
-  input.setAttribute('aria-expanded', 'false');
+  const box = suggestBox();
+  if (!box) return;
+  box.hidden = true; box.innerHTML = '';
   selIdx = -1; suggestions = [];
 }
 function openSuggest(html) {
-  list.innerHTML = html; list.hidden = false;
-  input.setAttribute('aria-expanded', 'true');
+  const box = suggestBox();
+  if (!box) return;
+  box.innerHTML = html; box.hidden = false;
 }
-
 function historyPanel() {
   const hist = getHistory();
-  if (!hist.length) return;
-  openSuggest(`
-    <div class="suggest__head"><span>Recent searches</span></div>
-    ${hist.map((h) => `<button class="suggest__row" data-q="${attr(h)}">
-      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--fg-3)">${svg(ICON.clock)}</span>
-      <span class="suggest__meta"><b>${esc(h)}</b><small>search again</small></span></button>`).join('')}`);
+  if (!hist.length) return closeSuggest();
+  openSuggest(`<div class="suggest__head"><span>Recent</span></div>` +
+    hist.map((h) => `<button class="suggest__row" data-q="${attr(h)}">
+      <span class="suggest__meta"><b>${esc(h)}</b></span></button>`).join(''));
 }
-
 const runSuggest = debounce(async (q) => {
-  if (q.trim().length < 2) { historyPanel(); return; }
-  openSuggest(`<div class="suggest__head"><span>Searching…</span></div>
-    ${'<div class="suggest__row"><span class="sk" style="width:38px;height:52px"></span><span class="suggest__meta" style="flex:1"><span class="sk sk--line w80"></span><span class="sk sk--line w40"></span></span></div>'.repeat(3)}`);
+  if (q.trim().length < 2) return historyPanel();
+  openSuggest(`<div class="suggest__head"><span>Searching…</span></div>`);
   const res = await api.suggest(q, 7);
-  if (input.value.trim() !== q.trim()) return;
+  const input = $('[data-search]');
+  if (!input || input.value.trim() !== q.trim()) return;
   suggestions = res;
-  if (!res.length) { openSuggest(`<p class="suggest__empty">Nothing found for “${esc(q)}”.</p>`); return; }
-  openSuggest(`
-    <div class="suggest__head"><span>Top matches</span><span>↵ to open</span></div>
-    ${res.map((a, i) => {
+  if (!res.length) return openSuggest(`<p class="suggest__empty">Nothing for “${esc(q)}”.</p>`);
+  openSuggest(`<div class="suggest__head"><span>Top matches</span><span>↵ open</span></div>` +
+    res.map((a) => {
       const t = displayTitle(a);
-      return `<button class="suggest__row" data-id="${a.id}" data-i="${i}">
+      return `<button class="suggest__row" data-id="${a.id}">
         ${imgTag(a.poster || genPoster(t), '', t)}
         <span class="suggest__meta"><b>${esc(t)}</b>
-          <small>${a.score ? `★ ${a.score.toFixed(2)} · ` : ''}${esc(a.type)}${a.year ? ` · ${a.year}` : ''}${a.episodes ? ` · ${a.episodes} ep` : ''}</small>
+          <small>${a.score ? `★ ${a.score.toFixed(2)} · ` : ''}${esc(a.type)}${a.year ? ` · ${a.year}` : ''}</small>
         </span></button>`;
-    }).join('')}
-    <button class="suggest__row" data-all="1">
-      <span class="suggest__ph" style="display:grid;place-items:center;background:var(--bg-3);color:var(--accent)">${svg(ICON.search)}</span>
-      <span class="suggest__meta"><b>See all results for “${esc(q)}”</b><small>full search with filters</small></span>
-    </button>`);
+    }).join('') +
+    `<button class="suggest__row" data-all="1"><span class="suggest__meta">
+      <b>All results for “${esc(q)}”</b></span></button>`);
 }, 320);
 
-input.addEventListener('input', () => runSuggest(input.value));
-input.addEventListener('focus', () => { if (!input.value.trim()) historyPanel(); else runSuggest(input.value); });
-
-input.addEventListener('keydown', (e) => {
-  const rows = $$('.suggest__row', list);
-  if (e.key === 'Escape') { closeSuggest(); input.blur(); return; }
+document.addEventListener('input', (e) => {
+  if (e.target.matches('[data-search]')) runSuggest(e.target.value);
+});
+document.addEventListener('focusin', (e) => {
+  if (!e.target.matches('[data-search]')) return;
+  e.target.value.trim() ? runSuggest(e.target.value) : historyPanel();
+});
+document.addEventListener('keydown', (e) => {
+  if (!e.target.matches?.('[data-search]')) return;
+  const rows = $$('.suggest__row', suggestBox() || document);
+  if (e.key === 'Escape') { closeSuggest(); e.target.blur(); return; }
+  if (e.key === 'Enter' && selIdx >= 0 && rows[selIdx]) { e.preventDefault(); rows[selIdx].click(); return; }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const q = e.target.value.trim();
+    if (!q) return;
+    pushHistory(q); closeSuggest(); e.target.blur();
+    go('/browse' + buildQuery({ q }));
+    return;
+  }
   if (!rows.length) return;
   if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
     e.preventDefault();
@@ -191,57 +202,23 @@ input.addEventListener('keydown', (e) => {
     rows.forEach((r, i) => r.classList.toggle('is-sel', i === selIdx));
     rows[selIdx].scrollIntoView({ block: 'nearest' });
   }
-  if (e.key === 'Enter' && selIdx >= 0) { e.preventDefault(); rows[selIdx].click(); }
 });
-
-on(list, 'click', '.suggest__row', (e, row) => {
-  if (row.dataset.id) {
-    pushHistory(input.value);
-    closeSuggest(); input.blur();
-    go(`/anime/${row.dataset.id}`);
-  } else if (row.dataset.q) {
-    input.value = row.dataset.q;
-    form.requestSubmit();
-  } else if (row.dataset.all) {
-    form.requestSubmit();
-  }
-});
-
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const q = input.value.trim();
-  if (!q) return;
-  pushHistory(q);
-  closeSuggest(); input.blur();
-  go('/browse' + buildQuery({ q }));
-});
-
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#searchForm')) closeSuggest();
+  const row = e.target.closest('.suggest__row');
+  if (row) {
+    const input = $('[data-search]');
+    if (row.dataset.id) { pushHistory(input?.value || ''); closeSuggest(); input?.blur(); go(`/anime/${row.dataset.id}`); }
+    else if (row.dataset.q) { if (input) input.value = row.dataset.q; pushHistory(row.dataset.q); closeSuggest(); go('/browse' + buildQuery({ q: row.dataset.q })); }
+    else if (row.dataset.all && input) { pushHistory(input.value); closeSuggest(); go('/browse' + buildQuery({ q: input.value.trim() })); }
+    return;
+  }
+  if (!e.target.closest('[data-searchbox]')) closeSuggest();
 });
 
-/* keep the box in sync with the URL */
-document.addEventListener('route:after', () => {
-  const { path, query } = parseHash();
-  input.value = path.startsWith('/browse') && query.q ? query.q : '';
+/* ── api state chip ───────────────────────────────────── */
+onApiState((s) => {
+  $$('[data-apistate]').forEach((el) => { el.textContent = s.demo ? 'DEMO CATALOG' : 'LIVE'; el.classList.toggle('is-demo', s.demo); });
 });
-
-/* ── random ───────────────────────────────────────────── */
-async function surprise() {
-  toast('Rolling the dice…', 'info', 1400);
-  const a = await api.random();
-  if (a?.id) go(`/anime/${a.id}`);
-  else toast('Could not pick one — try again.', 'bad');
-}
-$('#randomBtn')?.addEventListener('click', surprise);
-
-/* ── shortcuts modal ──────────────────────────────────── */
-const keysModal = $('#keysModal');
-function setModal(open) {
-  keysModal.hidden = !open;
-  document.body.style.overflow = open ? 'hidden' : '';
-}
-keysModal.addEventListener('click', (e) => { if (e.target.closest('[data-close-modal]')) setModal(false); });
 
 /* ── global keys ──────────────────────────────────────── */
 let gPending = false, gTimer = null;
@@ -250,11 +227,15 @@ window.addEventListener('keydown', (e) => {
   const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
   const onWatch = parseHash().path.startsWith('/watch');
 
-  if (e.key === 'Escape') { closeSuggest(); setModal(false); setDrawer(false); setSkinModal(false); return; }
+  if (e.key === 'Escape') {
+    closeSuggest(); setKeys(false); setLayoutModal(false);
+    document.documentElement.classList.remove('nav-open');
+    return;
+  }
   if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
 
-  if (e.key === '/') { e.preventDefault(); input.focus(); input.select(); return; }
-  if (e.key === '?') { e.preventDefault(); setModal(keysModal.hidden); return; }
+  if (e.key === '/') { e.preventDefault(); $('[data-search]')?.focus(); return; }
+  if (e.key === '?') { e.preventDefault(); setKeys(keysModal.hidden); return; }
 
   if (gPending) {
     gPending = false; clearTimeout(gTimer);
@@ -262,27 +243,23 @@ window.addEventListener('keydown', (e) => {
     if (dest) { e.preventDefault(); go(dest); }
     return;
   }
-  if (e.key.toLowerCase() === 'g') {
-    gPending = true;
-    gTimer = setTimeout(() => { gPending = false; }, 900);
-    return;
-  }
+  if (e.key.toLowerCase() === 'g') { gPending = true; gTimer = setTimeout(() => { gPending = false; }, 900); return; }
 
-  /* these would fight the player's own bindings */
-  if (onWatch) return;
-  if (e.key.toLowerCase() === 'r') { e.preventDefault(); surprise(); }
-  if (e.key.toLowerCase() === 't') { e.preventDefault(); $('#themeBtn').click(); }
-  if (e.key.toLowerCase() === 's') { e.preventDefault(); cycleSkin(); }
-  if (e.key.toLowerCase() === 'k') { e.preventDefault(); setSkinModal(skinModal.hidden); }
+  if (onWatch) return;          // the player owns these
+  const k = e.key.toLowerCase();
+  if (k === 'r') { e.preventDefault(); surprise(); }
+  if (k === 't') { e.preventDefault(); setSetting('theme', document.documentElement.dataset.theme === 'ink' ? 'paper' : 'ink'); applyTheme(); }
+  if (k === 'd') { e.preventDefault(); setLayoutModal(layoutModal.hidden); }
+  if (k === 'x') { e.preventDefault(); cycleLayout(); }
 });
 
-/* ── re-render cards when the library changes elsewhere ── */
-onStoreChange((what) => { if (what === 'settings') { applyTheme(); applySkin(); } });
+onStoreChange((w) => { if (w === 'settings' || w === 'all') applyTheme(); });
 
 /* ── go ───────────────────────────────────────────────── */
+applyTheme();
+mountLayout(getSettings().layout);
 startRouter();
-syncNav();
 
-console.info(`%c KITSU/LIVE %c press ? for shortcuts`,
+console.info('%c KITSU/LIVE %c press D to change design · ? for keys',
   'background:#ff3b18;color:#efece3;padding:3px 8px;font-weight:700;letter-spacing:.14em',
   'color:#6b6961;padding-left:8px');

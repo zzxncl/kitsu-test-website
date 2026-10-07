@@ -6,7 +6,8 @@ import {
   onStoreChange, addToList, inList, removeFromList, lastWatchedEp,
 } from '../store.js';
 import { createPlayer } from '../player.js';
-import { cardHTML, railHTML, bindRails, ICON, svg, displayTitle, emptyState } from '../components.js';
+import { railHTML, bindRails, ICON, svg, displayTitle, emptyState } from '../components.js';
+import { current } from '../layouts/index.js';
 import { $, $$, esc, attr, setMeta, fmtTime, scrollTop, imgTag, genPoster } from '../util.js';
 import { go, buildQuery } from '../router.js';
 import { toast } from '../toast.js';
@@ -235,7 +236,7 @@ export default async function watch({ mount, params, query }) {
   api.recommendations(a.id, 18).then((recs) => {
     const host = $('#recoHost', mount);
     if (!host || !recs.length) return;
-    host.innerHTML = railHTML('Because you watched this', recs.map((r) => cardHTML(r)).join(''), { icon: ICON.heart });
+    host.innerHTML = railHTML('Because you watched this', recs.map((r) => current().card(r)).join(''), { icon: ICON.heart });
     bindRails(host);
   });
 

@@ -1,7 +1,8 @@
 /* Kitsu Live — browse / search results with filters. */
 import { api, onApiState } from '../api.js';
 import { pushHistory } from '../store.js';
-import { cardHTML, skeletonGrid, emptyState, demoNotice, ICON, svg } from '../components.js';
+import { skeletonGrid, emptyState, demoNotice, ICON, svg } from '../components.js';
+import { current } from '../layouts/index.js';
 import { $, $$, esc, attr, setMeta, scrollTop, debounce } from '../util.js';
 import { go, buildQuery } from '../router.js';
 
@@ -139,7 +140,7 @@ export default async function browse({ mount, query }) {
     return { destroy: offNotice };
   }
 
-  resultsHost.innerHTML = `<div class="grid-posters">${res.items.map((a, i) => cardHTML(a, { eager: i < 6 })).join('')}</div>`;
+  resultsHost.innerHTML = `<div class="grid-posters">${res.items.map((a) => current().card(a)).join('')}</div>`;
   const totalTxt = res.total ? `${res.total.toLocaleString()} titles` : `${res.items.length} titles`;
   subEl.textContent = `${totalTxt}${res.last > 1 ? ` · page ${res.page} of ${res.last}` : ''}`;
   countEl.textContent = `Showing ${res.items.length} of ${totalTxt}`;

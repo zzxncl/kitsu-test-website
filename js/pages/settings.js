@@ -8,7 +8,7 @@ import { ICON, svg } from '../components.js';
 import { $, $$, esc, attr, setMeta } from '../util.js';
 import { toast } from '../toast.js';
 import { api } from '../api.js';
-import { SKINS } from '../skins.js';
+import { LAYOUTS } from '../layouts/index.js';
 
 export default async function settings({ mount }) {
   setMeta('Settings');
@@ -26,9 +26,9 @@ export default async function settings({ mount }) {
           <div class="panel">
             <h3>Appearance</h3>
             <div class="setting-row">
-              <div class="setting-row__text"><b>Skin</b><small>Five complete designs. Press <kbd>S</kbd> to cycle, <kbd>K</kbd> for the picker.</small></div>
-              <select class="select" data-set="skin">
-                ${SKINS.map((k) => `<option value="${k.id}" ${s.skin === k.id ? 'selected' : ''}>${k.name}</option>`).join('')}
+              <div class="setting-row__text"><b>Design</b><small>Five different sites. Press <kbd>D</kbd> for the picker, <kbd>X</kbd> to cycle.</small></div>
+              <select class="select" data-set="layout">
+                ${LAYOUTS.map((k) => `<option value="${k.id}" ${s.layout === k.id ? 'selected' : ''}>${k.name} — ${k.tagline}</option>`).join('')}
               </select>
             </div>
             <div class="setting-row">
@@ -151,7 +151,7 @@ export default async function settings({ mount }) {
         const val = ctl.type === 'checkbox' ? ctl.checked
           : (key === 'rate' ? Number(ctl.value) : ctl.value);
         setSetting(key, val);
-        if (key === 'theme' || key === 'skin') document.dispatchEvent(new CustomEvent('theme:apply'));
+        if (key === 'theme' || key === 'layout') location.reload();
         toast('Saved', 'ok', 1400);
       });
     });

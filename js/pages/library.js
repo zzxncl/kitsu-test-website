@@ -3,7 +3,8 @@ import {
   getListArray, LIST_STATUS, continueWatching, onStoreChange,
   removeFromList, addToList, clearProgress, seenEpisodes,
 } from '../store.js';
-import { cardHTML, resumeCardHTML, emptyState, ICON, svg, displayTitle } from '../components.js';
+import { resumeCardHTML, emptyState, ICON, svg, displayTitle } from '../components.js';
+import { current } from '../layouts/index.js';
 import { $, $$, esc, setMeta, fmtCount } from '../util.js';
 import { go, buildQuery } from '../router.js';
 import { toast } from '../toast.js';
@@ -54,7 +55,7 @@ export default async function library({ mount, query }) {
           ${rows.length
             ? `<div class="grid-posters">${rows.map((r) => `
                 <div style="position:relative" data-entry="${r.id}">
-                  ${cardHTML({ ...r.anime, id: r.id }, { showProgress: true })}
+                  ${current().card({ ...r.anime, id: r.id })}
                   <div style="display:flex;gap:.3rem;margin-top:.4rem">
                     <select class="select" data-status="${r.id}" style="height:30px;font-size:.76rem;flex:1">
                       ${LIST_STATUS.map((s) => `<option value="${s.id}" ${r.status === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}

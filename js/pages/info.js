@@ -5,9 +5,10 @@ import {
   lastWatchedEp, seenEpisodes, onStoreChange, markEpisode, clearProgress,
 } from '../store.js';
 import {
-  cardHTML, railHTML, bindRails, epGridHTML, starsHTML, genreChips,
+  railHTML, bindRails, epGridHTML, starsHTML, genreChips,
   ICON, svg, displayTitle, emptyState,
 } from '../components.js';
+import { current } from '../layouts/index.js';
 import { $, $$, esc, attr, imgTag, genPoster, setMeta, fmtCount, fmtDate, scrollTop } from '../util.js';
 import { toast } from '../toast.js';
 
@@ -273,7 +274,7 @@ export default async function info({ mount, params }) {
   api.recommendations(a.id, 20).then((recs) => {
     const host = $('#recoHost', mount);
     if (!host || !recs.length) return;
-    host.innerHTML = railHTML('More like this', recs.map((r) => cardHTML(r)).join(''), { icon: ICON.heart });
+    host.innerHTML = railHTML('More like this', recs.map((r) => current().card(r)).join(''), { icon: ICON.heart });
     bindRails(host);
   });
 

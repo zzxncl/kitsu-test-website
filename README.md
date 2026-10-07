@@ -3,23 +3,21 @@
 An anime index with an ambient-light player. Browse, search, track what you're
 watching — all in the browser, with no build step, no framework, no account.
 
-**Five skins**, switchable live — press <kbd>K</kbd> for the picker or
-<kbd>S</kbd> to cycle:
+**Five different sites**, switchable live — press <kbd>D</kbd> for the picker
+or <kbd>X</kbd> to cycle. Not five colour schemes: different navigation,
+different home page architecture, different density.
 
-| Skin | Look |
+| Design | What it is |
 |---|---|
-| **Press** | Editorial brutalism. Hairline rules, condensed poster type, hard-offset hovers. |
-| **Vault** | The modern streaming look, done carefully. Deep slate, soft depth, one electric accent. |
-| **Neon** | Late-night arcade. Black glass, magenta and cyan, scanlines. Hits hardest with ambient light. |
-| **Linen** | Warm paper and an italic serif. A reading room rather than a dashboard. |
-| **Noir** | Cinema. Pure greyscale, one blood accent, chrome almost absent. |
+| **Press** | Top bar with numbered sections. A split hero where the headline runs over the artwork, then horizontal rails. Hairlines, no rounding. |
+| **Orbit** | App shell. A fixed icon rail down the left, a floating search bar, one wide featured banner, then uniform dense grids — no carousels. |
+| **Broadsheet** | A newspaper. Centred masthead with a dateline, multi-column briefs with small thumbs, a standings sidebar. Serif throughout; the writing leads. |
+| **Terminal** | A console. No nav bar — a prompt line is the navigation, and the catalogue is a dense monospace table. Built for scanning a hundred titles. |
+| **Stage** | A television. Almost no interface: one title fills the screen, a filmstrip runs along the bottom, arrow keys move through the catalogue. |
 
-Each is one small file in `css/skins/` that overrides a set of surface
-variables — radius, border weight, shadow, fonts, card hover, panel fill —
-declared in `css/base.css`. Adding a sixth is a copy and a palette.
-
-Vanilla ES modules, hash routing, ~1,450 lines of hand-written CSS. Drop it on
-any static host.
+Each lives in `js/layouts/` (chrome, home composition, card shape) plus a
+matching file in `css/layouts/`. Routing, data, store and player are shared —
+a layout only decides what the site *is*.
 
 ---
 

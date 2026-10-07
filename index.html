@@ -1,150 +1,52 @@
 <!doctype html>
-<html lang="en" data-theme="ink" data-skin="press">
+<html lang="en" data-theme="ink" data-layout="press">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>KITSU LIVE</title>
-<meta name="description" content="KITSU LIVE — an anime index. Browse, track, and watch with an ambient-light player." />
+<meta name="description" content="An anime index — five completely different site designs, one ambient-light player." />
 <meta name="color-scheme" content="dark light" />
 <meta name="theme-color" content="#0b0b0c" />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Instrument+Serif:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://cdn.myanimelist.net" crossorigin />
 <link rel="preconnect" href="https://api.jikan.moe" crossorigin />
 <link rel="stylesheet" href="css/base.css" />
-<link rel="stylesheet" href="css/layout.css" />
 <link rel="stylesheet" href="css/components.css" />
 <link rel="stylesheet" href="css/pages.css" />
 <link rel="stylesheet" href="css/player.css" />
-<link rel="stylesheet" href="css/skins/press.css" />
-<link rel="stylesheet" href="css/skins/vault.css" />
-<link rel="stylesheet" href="css/skins/neon.css" />
-<link rel="stylesheet" href="css/skins/linen.css" />
-<link rel="stylesheet" href="css/skins/noir.css" />
+<link rel="stylesheet" href="css/layouts/press.css" />
+<link rel="stylesheet" href="css/layouts/orbit.css" />
+<link rel="stylesheet" href="css/layouts/broadsheet.css" />
+<link rel="stylesheet" href="css/layouts/terminal.css" />
+<link rel="stylesheet" href="css/layouts/stage.css" />
 </head>
 <body>
 <a class="skip-link" href="#main">SKIP TO CONTENT</a>
-
 <div class="grain" aria-hidden="true"></div>
 
-<header class="topbar" id="topbar">
-  <div class="topbar__inner">
-    <button class="icon-btn topbar__menu" id="navToggle" aria-label="Open menu" aria-expanded="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
-    </button>
-
-    <a class="brand" href="#/" aria-label="Kitsu Live home">
-      <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 40" role="img">
-          <rect x="1.5" y="1.5" width="37" height="37" fill="none" stroke="currentColor" stroke-width="3"/>
-          <path d="M11 10v20M11 20l11-10M11 20l11 10" fill="none" stroke="currentColor" stroke-width="3.4"/>
-          <rect x="26" y="17" width="6" height="6" fill="currentColor" stroke="none"/>
-        </svg>
-      </span>
-      <span class="brand__text">KITSU<span class="brand__slash">/</span>LIVE</span>
-    </a>
-
-    <nav class="topnav" aria-label="Primary">
-      <a href="#/" data-nav="home"><i>01</i>INDEX</a>
-      <a href="#/browse" data-nav="browse"><i>02</i>SEARCH</a>
-      <a href="#/schedule" data-nav="schedule"><i>03</i>WEEK</a>
-      <a href="#/library" data-nav="library"><i>04</i>SHELF</a>
-    </nav>
-
-    <form class="searchbox" id="searchForm" role="search" autocomplete="off">
-      <span class="searchbox__tag">FIND</span>
-      <input id="searchInput" type="search" placeholder="TITLE, GENRE, YEAR…" aria-label="Search anime"
-             role="combobox" aria-expanded="false" aria-controls="suggestList" />
-      <kbd class="searchbox__kbd">/</kbd>
-      <div class="suggest" id="suggestList" role="listbox" hidden></div>
-    </form>
-
-    <div class="topbar__actions">
-      <button class="icon-btn" id="randomBtn" aria-label="Random anime" title="Random">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="9" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button class="icon-btn" id="skinBtn" aria-label="Change skin" title="Change skin (S)">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17"/><circle cx="8.4" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.6" cy="14.5" r="1.3" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button class="icon-btn" id="themeBtn" aria-label="Toggle theme" title="Invert">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17Z" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <a class="icon-btn" href="#/settings" aria-label="Settings" title="Settings">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><rect x="7" y="4.6" width="4.8" height="4.8" fill="currentColor" stroke="none"/><rect x="13" y="14.6" width="4.8" height="4.8" fill="currentColor" stroke="none"/></svg>
-      </a>
-    </div>
-  </div>
-  <div class="topbar__progress" id="loadBar" aria-hidden="true"></div>
-</header>
-
-<div class="drawer" id="drawer" hidden>
-  <div class="drawer__panel" role="dialog" aria-label="Menu" aria-modal="true">
-    <p class="drawer__kicker">NAVIGATION</p>
-    <nav class="drawer__nav">
-      <a href="#/" data-nav="home"><i>01</i>INDEX</a>
-      <a href="#/browse" data-nav="browse"><i>02</i>SEARCH</a>
-      <a href="#/schedule" data-nav="schedule"><i>03</i>WEEK</a>
-      <a href="#/library" data-nav="library"><i>04</i>SHELF</a>
-      <a href="#/settings" data-nav="settings"><i>05</i>CONFIG</a>
-    </nav>
-    <div class="drawer__foot">
-      <span id="drawerMode" class="chip"></span>
-      <p>KITSU/LIVE — AN ANIME INDEX</p>
-    </div>
-  </div>
-  <div class="drawer__scrim" data-close-drawer></div>
-</div>
-
+<!-- every layout builds its own chrome into these two slots -->
+<div id="shell"></div>
 <main id="main" class="main" tabindex="-1"></main>
-
-<footer class="footer">
-  <div class="footer__rule"><span>END OF TRANSMISSION</span></div>
-  <div class="footer__inner">
-    <div class="footer__brand">
-      <p class="footer__wordmark">KITSU<span>/</span>LIVE</p>
-      <p>An independent anime index. Catalog metadata from the Jikan (MyAnimeList) API. Not affiliated with any studio, publisher or streaming service.</p>
-    </div>
-    <div class="footer__cols">
-      <div><h4>BROWSE</h4>
-        <a href="#/browse?sort=trending">Trending</a>
-        <a href="#/browse?season=now">This season</a>
-        <a href="#/browse?type=movie">Films</a>
-        <a href="#/browse?status=upcoming">Upcoming</a>
-      </div>
-      <div><h4>YOURS</h4>
-        <a href="#/library">Shelf</a>
-        <a href="#/library?tab=watching">Continue</a>
-        <a href="#/settings">Config</a>
-      </div>
-      <div><h4>KEYS</h4>
-        <span><kbd>/</kbd> search</span>
-        <span><kbd>g</kbd><kbd>h</kbd> index</span>
-        <span><kbd>?</kbd> all keys</span>
-      </div>
-    </div>
-  </div>
-  <p class="footer__legal">NO VIDEO IS HOSTED HERE — PLAYBACK USES THE SOURCE YOU CONFIGURE IN <code>js/config.js</code></p>
-</footer>
-
-<nav class="tabbar" aria-label="Mobile">
-  <a href="#/" data-nav="home"><span>INDEX</span></a>
-  <a href="#/browse" data-nav="browse"><span>SEARCH</span></a>
-  <a href="#/schedule" data-nav="schedule"><span>WEEK</span></a>
-  <a href="#/library" data-nav="library"><span>SHELF</span></a>
-</nav>
+<div id="shellFoot"></div>
 
 <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
 
-<div class="modal" id="skinModal" hidden>
-  <div class="modal__card" role="dialog" aria-modal="true" aria-label="Choose a skin">
-    <header><h3>SKIN</h3><button class="icon-btn" data-close-skin aria-label="Close">
-      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
-    <p class="lbl" style="margin-bottom:.9rem">Same site, five different designs. Pick one — it sticks.</p>
-    <div class="skin-grid" id="skinGrid"></div>
+<div class="modal" id="layoutModal" hidden>
+  <div class="modal__card modal__card--wide" role="dialog" aria-modal="true" aria-label="Choose a design">
+    <header>
+      <div>
+        <h3>CHOOSE A DESIGN</h3>
+        <p class="lbl" style="margin-top:.3rem">Five different sites. Not five colour schemes — different navigation, different home page, different density.</p>
+      </div>
+      <button class="icon-btn" data-close-layout aria-label="Close">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="design-grid" id="designGrid"></div>
   </div>
-  <div class="modal__scrim" data-close-skin></div>
+  <div class="modal__scrim" data-close-layout></div>
 </div>
 
 <div class="modal" id="keysModal" hidden>
@@ -153,20 +55,19 @@
       <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
     <div class="keys-grid">
       <div><kbd>/</kbd><span>Focus search</span></div>
-      <div><kbd>g</kbd><kbd>h</kbd><span>Index</span></div>
-      <div><kbd>g</kbd><kbd>b</kbd><span>Search</span></div>
-      <div><kbd>g</kbd><kbd>l</kbd><span>Shelf</span></div>
-      <div><kbd>r</kbd><span>Random title</span></div>
-      <div><kbd>t</kbd><span>Invert theme</span></div>
+      <div><kbd>D</kbd><span>Switch design</span></div>
+      <div><kbd>T</kbd><span>Invert theme</span></div>
+      <div><kbd>R</kbd><span>Random title</span></div>
+      <div><kbd>g</kbd><kbd>h</kbd><span>Home</span></div>
+      <div><kbd>g</kbd><kbd>b</kbd><span>Browse</span></div>
+      <div><kbd>g</kbd><kbd>l</kbd><span>Library</span></div>
       <div><kbd>Space</kbd><span>Play / pause</span></div>
       <div><kbd>←</kbd><kbd>→</kbd><span>Seek 5s</span></div>
-      <div><kbd>J</kbd><kbd>L</kbd><span>Seek 10s</span></div>
       <div><kbd>↑</kbd><kbd>↓</kbd><span>Volume</span></div>
-      <div><kbd>M</kbd><span>Mute</span></div>
       <div><kbd>F</kbd><span>Fullscreen</span></div>
       <div><kbd>A</kbd><span>Ambient light</span></div>
+      <div><kbd>⇧A</kbd><span>Flood the page</span></div>
       <div><kbd>N</kbd><kbd>P</kbd><span>Next / prev episode</span></div>
-      <div><kbd>0</kbd>–<kbd>9</kbd><span>Jump to percent</span></div>
       <div><kbd>Esc</kbd><span>Close overlay</span></div>
     </div>
   </div>
@@ -175,6 +76,6 @@
 
 <script src="ambient-light.js"></script>
 <script type="module" src="js/app.js"></script>
-<noscript><p style="padding:2rem;text-align:center">KITSU/LIVE NEEDS JAVASCRIPT.</p></noscript>
+<noscript><p style="padding:2rem;text-align:center">This needs JavaScript.</p></noscript>
 </body>
 </html>
